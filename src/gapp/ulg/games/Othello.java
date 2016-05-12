@@ -46,22 +46,20 @@ import java.util.*;
  * può consultare
  * <a href="https://it.wikipedia.org/wiki/Othello_(gioco)">Othello</a> */
 public class Othello implements GameRuler<PieceModel<Species>> {
-    public final Player player1;
-    public final Player player2;
-    public Board<PieceModel<Species>> board;
-    public long time;
-    public int size;
-    public int cT;
-    public List game; //Lista di tutti gli stati di gioco in ordine di esecuzione
+    private final Player player1;
+    private final Player player2;
+    private Board<PieceModel<Species>> board;
+    private long time;
+    private int size;
+    private int cT;
+    private List gS; //Lista di tutti gli stati di gioco in ordine di esecuzione
 
     /** Crea un GameRuler per fare una partita a Othello, equivalente a
      * {@link Othello#Othello(long, int, String, String) Othello(0,8,p1,p2)}.
      * @param p1  il nome del primo giocatore
      * @param p2  il nome del secondo giocatore
      * @throws NullPointerException se p1 o p2 è null */
-    public Othello(String p1, String p2) {
-        this(0, 8, p1, p2);
-    }
+    public Othello(String p1, String p2) { this(0, 8, p1, p2); }
 
     /** Crea un GameRuler per fare una partita a Othello.
      * @param time  tempo in millisecondi per fare una mossa, se <= 0 significa nessun
@@ -80,7 +78,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         this.player2 = new RandPlayer<>(p2);
         for(Player i : Arrays.asList(player1, player2)) { i.setGame(copy()); } //Copia il gameruler ai giocatori
         this.cT = 1; //Inizia il player1 (nero)
-        this.game = new ArrayList<>(); //Tentativo
+        this.gS = new ArrayList<>(); //Tentativo
     }
 
     private void startP(int size){
@@ -100,11 +98,16 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
     @Override
     public <T> T getParam(String name, Class<T> c) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        /*
+        List<String> params = Arrays.asList("board", "time", "player1", "player2", "size");
+        if(name == null || c == null) { throw new NullPointerException("name o c sono null");}
+        if(!params.contains(name)) { throw new IllegalArgumentException("Nessun parametro name trovato");}
+        */
+        return null; //TEMPORANEO
     }
 
     @Override
-    public List<String> players() { return Arrays.asList(player1.name(), player2.name()); } //Sicuramente esiste un metodo più semplice
+    public List<String> players() { return Arrays.asList(player1.name(), player2.name()); }
 
     /** Assegna il colore "nero" al primo giocatore e "bianco" al secondo. */
     @Override
@@ -122,17 +125,17 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * automaticamente passato all'altro giocatore. Ma se anche l'altro giuocatore
      * non ha mosse valide, la partita termina. */
     @Override
-    public int turn() { /*throw new UnsupportedOperationException("DA IMPLEMENTARE");*/
+    public int turn() {
         if(cT == 1 && validMoves().size() == 0) { cT = 2; }
         if(cT == 2 && validMoves().size() == 0) { cT = 1; }
-        if(player1.getMove() == null && player2.getMove() == null) { cT = 0; } //Sbagliato, score è necessario!
-        return cT; }
+        if(player1.getMove() == null && player2.getMove() == null) { cT = 0; }
+        return cT;
+    }
 
     /** Se la mossa non è valida termina il gioco dando la vittoria all'altro
      * giocatore. */
     @Override
-    public boolean move(Move<PieceModel<Species>> m) {
-        /*throw new UnsupportedOperationException("DA IMPLEMENTARE");*/
+    public boolean move(Move<PieceModel<Species>> m) { //Diversi dubbi sull'esecuzione di SWAP
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(result() > -1) { throw new IllegalStateException("Il gioco è già terminato"); }
         if(m.getKind() == Move.Kind.ACTION) {
@@ -146,31 +149,30 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                         board.put(new PieceModel<Species>(Species.DISC,c), (Pos) ((Action) i).getPos().get(0)); } } }
             if(cT == 1) { cT = 2; } //Se sta giocando il player1 passa al 2
             cT = 1; return true; } //Ritorna il gioco al player1
+        gS.add(copy());
+        if(!isValid(m)) { cT = 0; }
         return false;
     }
 
     @Override
     public boolean unMove() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(gS.size() > 0) { board = ((Board) gS.get(gS.size()-1)); } //Recupera l'ultimo Game Status dalla lista gS
+        return false;
     }
 
     @Override
     public boolean isPlaying(int i) {
-        /*throw new UnsupportedOperationException("DA IMPLEMENTARE");*/
         if(i > players().size()) { throw new IllegalArgumentException("L'indice di turnazione non corrisponde a nessun giocatore"); }
-        if(result() > -1) { return false; }
-        return true;
+        return result() <= -1; //Se il gioco è terminato è sempre false, alternativamente il giocatore è sicuramente in gioco
     }
 
     @Override
-    public int result() { /*throw new UnsupportedOperationException("DA IMPLEMENTARE");*/
-        if(player1.getMove() == null && player2.getMove() == null) { //Se la partita è effettivamente finita
+    public int result() {
+        if(player1.getMove() == null && player2.getMove() == null) { //Se la partita è effettivamente finita POSSIBILE ERRORE LOGICO!
             if(score(1) == score(2)) { return 0; } //Patta
             if(score(1) > score(2)) { return 1; }
-            if(score(2) > score(1)) { return 2;}
-        }
-        return -1; //Il gioco NON è finito
-    }
+            if(score(2) > score(1)) { return 2;} }
+        return -1; } //Il gioco NON è terminato
 
     /** Ogni mossa, eccetto l'abbandono, è rappresentata da una {@link Action} di tipo
      * {@link Action.Kind#ADD} seguita da una {@link Action} di tipo
@@ -196,20 +198,18 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                         if(board.get(board.adjacent(tp, d)) == null || board.get(board.adjacent(tp, d)) != new PieceModel<Species>(Species.DISC, cA)) {
                             p1 = board.get(board.adjacent(tp, d));
                             pos1 = board.adjacent(tp, d);
-                            break;
-                        }
+                            break; }
                         tp = board.adjacent(tp, d);
                         posizioni.add(board.adjacent(tp, d));
                     }
                     tp = p; //Resetto la posizione temporanea
                     while(p2 == new PieceModel<Species>(Species.DISC, cA)){
-                        if(board.get(board.adjacent(p, d2)) == null || board.get(board.adjacent(p, d2)) != new PieceModel<Species>(Species.DISC, cA)) {
-                            p1 = board.get(board.adjacent(p, d2));
+                        if(board.get(board.adjacent(tp, d2)) == null || board.get(board.adjacent(tp, d2)) != new PieceModel<Species>(Species.DISC, cA)) {
+                            p2 = board.get(board.adjacent(tp, d2));
                             pos2 = board.adjacent(tp, d2);
-                            break;
-                        }
+                            break; }
                         tp = board.adjacent(tp, d2);
-                        posizioni.add(board.adjacent(p, d2));
+                        posizioni.add(board.adjacent(tp, d2));
                     }
                     if(p1 == null && p2 != new PieceModel<Species>(Species.DISC, cA) && p2 != null) { //Se p1 = null e p2 = pezzo del player corrente
                         Action<PieceModel<Species>> a1 = new Action<>(pos1, new PieceModel<>(Species.DISC, cP));
@@ -227,10 +227,9 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
         return mosse;
     } //Questo metodo è un macello andrebbe riscritto interamente
-
+    
     @Override
     public double score(int i) {
-        /*throw new UnsupportedOperationException("DA IMPLEMENTARE");*/
         int counter = 0;
         if(i == 1) {
             for(Pos p : board.positions()) { if(board.get(p) == new PieceModel<Species>(Species.DISC, "nero")) {counter++;} }
