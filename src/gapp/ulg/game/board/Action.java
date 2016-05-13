@@ -167,9 +167,8 @@ public class Action<P> {
     @Override
     public boolean equals(Object x) {
         if(x instanceof Action && Objects.equals(((Action) x).getKind(),kind) &&
-                Objects.equals(((Action) x).getPiece(),piece) && Objects.equals(((Action) x).getPos(),pos) &&
-                Objects.equals(((Action) x).getDir(),dir) && Objects.equals(((Action) x).getSteps(),steps)) { return true; } return false;
-    }
+                Objects.equals(((Action) x).getPiece(),piece) && ((Action) x).getPos().containsAll(pos) &&
+                Objects.equals(((Action) x).getDir(),dir) && Objects.equals(((Action) x).getSteps(),steps)) { return true; } return false; }
 
     /** Ridefinito coerentemente alla ridefinizione di {@link Action#equals(Object)}.
      * @return hash code di questa azione */

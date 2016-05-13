@@ -70,9 +70,9 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * @throws NullPointerException se {@code p1} o {@code p2} è null
      * @throws IllegalArgumentException se size non è uno dei valori 6,8,10 o 12 */
     public Othello(long time, int size, String p1, String p2) {
-        this.board = new BoardOct(size, size);
         this.time = time;
         this.size = size;
+        this.board = new BoardOct(size, size);
         startP(size);
         this.player1 = new RandPlayer<>(p1);
         this.player2 = new RandPlayer<>(p2);
@@ -98,11 +98,9 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
     @Override
     public <T> T getParam(String name, Class<T> c) {
-        /*
-        List<String> params = Arrays.asList("board", "time", "player1", "player2", "size");
+        List<String> params = Arrays.asList("board", "time", "player1", "player2", "size", "cT", "gS");
         if(name == null || c == null) { throw new NullPointerException("name o c sono null");}
         if(!params.contains(name)) { throw new IllegalArgumentException("Nessun parametro name trovato");}
-        */
         return null; //TEMPORANEO
     }
 
@@ -155,8 +153,10 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public boolean unMove() {
-        if(gS.size() > 0) { board = ((Board) gS.get(gS.size()-1)); } //Recupera l'ultimo Game Status dalla lista gS
+    public boolean unMove() { //Sbagliato
+        if(gS.size() > 0) {
+            return true; //TEMPORANEO!!!
+        }
         return false;
     }
 
@@ -224,10 +224,9 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                 }
             }
         }
-
         return mosse;
-    } //Questo metodo è un macello andrebbe riscritto interamente
-    
+    }
+
     @Override
     public double score(int i) {
         int counter = 0;

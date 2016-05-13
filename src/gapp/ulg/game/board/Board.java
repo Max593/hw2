@@ -78,8 +78,7 @@ public interface Board<P> {
      * @throws NullPointerException se p è null */
     default boolean isPos(Pos p) {
         if(p == null) { throw new NullPointerException("La posizione è null"); }
-        if(positions().contains(p)) { return true; } return false;
-    }
+        if(positions().contains(p)) { return true; } return false; }
 
     /** Ritorna il (modello di) pezzo nella posizione p della board o null se la
      * posizione è vuota o non è una posizione della board.
@@ -108,7 +107,7 @@ public interface Board<P> {
     default Set<Pos> get(P pm) {
         if(pm == null) { throw new NullPointerException("Non si può dare null in input"); }
         Set<Pos> ris = new HashSet<>();
-        for(Pos i : positions()){ if(get(i) == pm) { ris.add(i); } }
+        for(Pos i : positions()){ if(Objects.equals(get(i), pm)) { ris.add(i); } }
         return Collections.unmodifiableSet(ris);
     }
 
@@ -162,9 +161,13 @@ public interface Board<P> {
         if(pm == null || p == null || d == null) { throw new NullPointerException("La pedina, la posizione o la direzione è null"); }
         if(n <= 0) { throw new IllegalArgumentException("Il numero di posizioni da percorrere è <= 0"); }
         Pos temp = p; //Posizione di origine.
+        List<Pos> tempL = new ArrayList<>();
         for(int i = 0; i < n; i++) {
             temp = adjacent(temp, d);
-            if(temp == null) { throw new IllegalArgumentException("La posizione non è nella Board"); } }
-        put(pm, temp);
+            if(temp == null) { throw new IllegalArgumentException("La posizione non è nella Board"); }
+            tempL.add(temp);
+        }
+        put(pm, p);
+        for(Pos pos : tempL) { put(pm, pos); }
     }
 }
