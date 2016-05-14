@@ -161,13 +161,12 @@ public interface Board<P> {
         if(n <= 0) { throw new IllegalArgumentException("Il numero di posizioni da percorrere è <= 0"); }
         Pos temp = p; //Posizione di origine.
         List<Pos> tempL = new ArrayList<>();
-        tempL.add(p);
         for(int i = 0; i < n-1; i++) {
             temp = adjacent(temp, d);
             if(temp == null) { throw new IllegalArgumentException("La posizione non è nella Board"); }
             tempL.add(temp);
         }
         put(pm, p);
-        for(Pos p1 : tempL) { put(pm, p1); }
+        for(Pos pos : tempL) { put(pm, pos); }
     }
 }

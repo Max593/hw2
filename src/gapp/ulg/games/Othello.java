@@ -52,7 +52,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     private long time;
     private int size;
     private int cT;
-    private List gS; //Lista di tutti gli stati di gioco in ordine di esecuzione
+    private List<GameRuler> gS; //Lista di tutti gli stati di gioco in ordine di esecuzione
 
     /** Crea un GameRuler per fare una partita a Othello, equivalente a
      * {@link Othello#Othello(long, int, String, String) Othello(0,8,p1,p2)}.
@@ -97,10 +97,20 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
     @Override
     public <T> T getParam(String name, Class<T> c) {
-        List<String> params = Arrays.asList("board", "time", "player1", "player2", "size", "cT", "gS");
         if(name == null || c == null) { throw new NullPointerException("name o c sono null");}
-        if(!params.contains(name)) { throw new IllegalArgumentException("Nessun parametro name trovato");}
-        return null; //TEMPORANEO
+        if(!Arrays.asList("Board", "Time").contains(name)) {
+            throw new IllegalArgumentException("Nessun parametro corrispondente trovato");
+        }
+        if(name == "Time") {
+            if(c != String.class) { throw new ClassCastException("Tipo del valore incompatibile"); }
+            if(time > 60) {
+                String ris = String.valueOf(time/60)+"m"+String.valueOf(time%60)+"s";
+                return (T) ris;
+            }
+            if(time < 60) { return (T) (String.valueOf(time/60)+"s"); }
+        }
+        if(name == "Board") { return (T) (String.valueOf(size)+"x"+String.valueOf(size)); }
+        return null; //TENTATIVO
     }
 
     @Override
@@ -239,7 +249,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
     @Override
     public GameRuler<PieceModel<Species>> copy() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        return null; //TEMPORANEO
     }
 
     @Override
