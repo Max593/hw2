@@ -39,18 +39,15 @@ public class RandPlayer<P> implements Player<P> {
     }
 
     @Override
-    public void moved(int i, Move<P> m) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
-    }
+    public void moved(int i, Move<P> m) { } //Da scrivere
 
     @Override
     public Move<P> getMove() {
-        /*throw new UnsupportedOperationException("DA IMPLEMENTARE");*/
         if(gameRul == null || gameRul.result() >= 0 ||
                 gameRul.players().indexOf(name)+1 != gameRul.turn()) { throw new IllegalStateException("Il gioco potrebbe non essere impostato, terminato o non è il turno del giocatore"); }
-
         List temp = new ArrayList<>();
         temp.addAll(gameRul.validMoves());
+        if(temp.size() == 0) { return null; } //Se non ci sono mosse possibili in questo momento del gioco ritorna null
         Random rand = new Random();
         return (Move) temp.get(rand.nextInt(temp.size())); } //Mossa random
 }

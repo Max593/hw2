@@ -70,22 +70,21 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * @throws NullPointerException se {@code p1} o {@code p2} è null
      * @throws IllegalArgumentException se size non è uno dei valori 6,8,10 o 12 */
     public Othello(long time, int size, String p1, String p2) {
+        if(p1 == null || p2 == null) { throw new NullPointerException("Il player1 o il player2 è null"); }
+        if(!Arrays.asList(6, 8, 10, 12).contains(size)) { throw new IllegalArgumentException("Size non è 6, 8, 10 o 12"); }
+
+        this.player1 = new RandPlayer<>(p1);
+        this.player2 = new RandPlayer<>(p2);
         this.time = time;
         this.size = size;
         this.board = new BoardOct(size, size);
-        startP(size);
-        this.player1 = new RandPlayer<>(p1);
-        this.player2 = new RandPlayer<>(p2);
-        for(Player i : Arrays.asList(player1, player2)) { i.setGame(copy()); } //Copia il gameruler ai giocatori
-        this.cT = 1; //Inizia il player1 (nero)
-        this.gS = new ArrayList<>(); //Tentativo
-    }
-
-    private void startP(int size){
         board.put(new PieceModel(Species.DISC, "bianco"), new Pos(size/2, size/2)); //B
         board.put(new PieceModel(Species.DISC, "nero"), new Pos((size/2)+1, size/2)); //N
         board.put(new PieceModel(Species.DISC, "nero"), new Pos(size/2, (size/2)+1)); //N
         board.put(new PieceModel(Species.DISC, "bianco"), new Pos((size/2)+1, (size/2)+1)); //B
+        this.cT = 1; //Inizia il player1 (nero)
+        this.gS = new ArrayList<>(); //SPERIMENTALE
+        for(Player i : Arrays.asList(player1, player2)) { i.setGame(copy()); } //Copia il gameruler ai giocatori
     }
 
     /** Il nome rispetta il formato:
@@ -109,7 +108,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
     /** Assegna il colore "nero" al primo giocatore e "bianco" al secondo. */
     @Override
-    public String color(String name) {
+    public String color(String name) { //Ancora mai usato in maniera utile
         if(name == null) { throw new NullPointerException("Il nome del player non può essere null"); }
         if(!players().contains(name)) { throw new IllegalArgumentException("Il player non è presente nel gioco"); }
         if(players().indexOf(name) == 0) { return "nero"; }
@@ -133,7 +132,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     /** Se la mossa non è valida termina il gioco dando la vittoria all'altro
      * giocatore. */
     @Override
-    public boolean move(Move<PieceModel<Species>> m) { //Diversi dubbi sull'esecuzione di SWAP
+    public boolean move(Move<PieceModel<Species>> m) { //Ancora non ho determinato come passare la vittoria all'altro giocatore
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(result() > -1) { throw new IllegalStateException("Il gioco è già terminato"); }
         if(m.getKind() == Move.Kind.ACTION) {
@@ -142,34 +141,34 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             for(Object i : m.getActions()) { //Le varie azioni
                 if(((Action) i).getKind() == Action.Kind.ADD) {
                     board.put(new PieceModel<Species>(Species.DISC,c), (Pos) ((Action) i).getPos().get(0)); }
-                if(((Action) i).getKind() == Action.Kind.SWAP) {
+                if(((Action) i).getKind() == Action.Kind.SWAP) { //Potrebbe essere semplificato
                     for(Object p : ((Action) i).getPos()) {
                         board.put(new PieceModel<Species>(Species.DISC,c), (Pos) ((Action) i).getPos().get(0)); } } }
             if(cT == 1) { cT = 2; } //Se sta giocando il player1 passa al 2
             cT = 1; return true; } //Ritorna il gioco al player1
-        gS.add(copy());
-        if(!isValid(m)) { cT = 0; }
+        gS.add(copy()); //Copia lo status di gioco in caso di unMove
+        if(!isValid(m)) { cT = 0; } //Non ho ancora specificato come vince l'altro giocatore
         return false;
     }
 
     @Override
-    public boolean unMove() { //Sbagliato
+    public boolean unMove() { //ANCORA DA IMPLEMENTARE, serve copy
         if(gS.size() > 0) {
-            return true; //TEMPORANEO!!!
+            return true;
         }
         return false;
     }
 
     @Override
     public boolean isPlaying(int i) {
-        if(i > players().size()) { throw new IllegalArgumentException("L'indice di turnazione non corrisponde a nessun giocatore"); }
+        if(i > players().size()) { throw new IllegalArgumentException("L'indice non corrisponde a nessun giocatore"); }
         return result() <= -1; //Se il gioco è terminato è sempre false, alternativamente il giocatore è sicuramente in gioco
     }
 
     @Override
     public int result() {
         if(player1.getMove() == null && player2.getMove() == null) { //Se la partita è effettivamente finita POSSIBILE ERRORE LOGICO!
-            if(score(1) == score(2)) { return 0; } //Patta
+            if(score(1) == score(2)) { return 0; } //Parità
             if(score(1) > score(2)) { return 1; }
             if(score(2) > score(1)) { return 2;} }
         return -1; } //Il gioco NON è terminato
@@ -179,11 +178,10 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * {@link Action.Kind#SWAP}. */
     @Override
     public Set<Move<PieceModel<Species>>> validMoves() {//Le mosse inizieranno solo con ADD e seguiranno solo con SWAP
-        /*throw new UnsupportedOperationException("DA IMPLEMENTARE");*/
         Set<Move<PieceModel<Species>>> mosse = new HashSet<>(); //Insieme delle mosse (risultato), inizializzato come insieme vuoto
         String cA = "nero";
         String cP = "bianco";
-        if(cT == 1) { cA = "bianco"; cP = "nero"; } //Colore delle pedine del player in base al turno di gioco
+        if(cT == 1) { cA = "bianco"; cP = "nero"; } //Colore delle pedine del player in base al turno di gioco [cA = Avversario, cP = Player ]
 
         for(Pos p : board.positions()){ //Tutte le posizioni della board
             if(board.get(p) == new PieceModel<Species>(Species.DISC, cA)) { //Solo pedine del colore opposto
