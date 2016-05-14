@@ -84,7 +84,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         board.put(new PieceModel(Species.DISC, "bianco"), new Pos((size/2)+1, (size/2)+1)); //B
         this.cT = 1; //Inizia il player1 (nero)
         this.gS = new ArrayList<>(); //SPERIMENTALE
-        for(Player i : Arrays.asList(player1, player2)) { i.setGame(copy()); } //Copia il gameruler ai giocatori
+        for(Player i : Arrays.asList(player1, player2)) { i.setGame(copy()); } //Distribuisce una copia del gameruler ai giocatori
     }
 
     /** Il nome rispetta il formato:
@@ -155,29 +155,30 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                     for(Object p : ((Action) i).getPos()) {
                         board.put(new PieceModel<Species>(Species.DISC,c), (Pos) ((Action) i).getPos().get(0)); } } }
             if(cT == 1) { cT = 2; } //Se sta giocando il player1 passa al 2
-            cT = 1; return true; } //Ritorna il gioco al player1
-        gS.add(copy()); //Copia lo status di gioco in caso di unMove
+            cT = 1;
+            gS.add(copy()); //Copia lo status di gioco in caso di unMove
+            return true;} //Ritorna il gioco al player1
         if(!isValid(m)) { cT = 0; } //Non ho ancora specificato come vince l'altro giocatore
         return false;
     }
 
     @Override
-    public boolean unMove() { //ANCORA DA IMPLEMENTARE, serve copy
+    public boolean unMove() {
         if(gS.size() > 0) {
-            return true;
+            for(Player i : Arrays.asList(player1, player2)) { i.setGame(gS.get(gS.size()-2)); } //Dovrebbe essere -2 per prendere la penultima azione (da testare)
         }
         return false;
     }
 
     @Override
     public boolean isPlaying(int i) {
-        if(i > players().size()) { throw new IllegalArgumentException("L'indice non corrisponde a nessun giocatore"); }
+        if(!Arrays.asList(1, 2).contains(size)) { throw new IllegalArgumentException("L'indice non corrisponde a nessun giocatore"); }
         return result() <= -1; //Se il gioco è terminato è sempre false, alternativamente il giocatore è sicuramente in gioco
     }
 
     @Override
     public int result() {
-        if(player1.getMove() == null && player2.getMove() == null) { //Se la partita è effettivamente finita POSSIBILE ERRORE LOGICO!
+        if(player1.getMove() == null && player2.getMove() == null) { //Se la partita è effettivamente finita
             if(score(1) == score(2)) { return 0; } //Parità
             if(score(1) > score(2)) { return 1; }
             if(score(2) > score(1)) { return 2;} }
@@ -237,6 +238,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
     @Override
     public double score(int i) {
+        if(!Arrays.asList(1, 2).contains(size)) { throw new IllegalArgumentException("L'indice di turnazione non fa riferimento a nessun giocatore"); }
         int counter = 0;
         if(i == 1) {
             for(Pos p : board.positions()) { if(board.get(p) == new PieceModel<Species>(Species.DISC, "nero")) {counter++;} }
@@ -248,10 +250,21 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public GameRuler<PieceModel<Species>> copy() {
+    public GameRuler<PieceModel<Species>> copy() { //ERRORE DI STACK OVERFLOW, DA SISTEMARE!!
+        /*return new Othello(time, size, player1, player2, board, cT, gS);*/
         return null; //TEMPORANEO
     }
 
+    private Othello(long time, int size, Player p1, Player p2, Board<PieceModel<Species>> b, int cT, List<GameRuler> gS) { //Dovrebbe essere una copia speculare di Othello (speriamo)
+        this.player1 = p1;
+        this.player2 = p2;
+        this.time = time;
+        this.size = size;
+        this.board = b;
+        this.cT = cT;
+        this.gS = gS;
+    }
+
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public Mechanics<PieceModel<Species>> mechanics() { return null; } //Ancora da fare
 }
