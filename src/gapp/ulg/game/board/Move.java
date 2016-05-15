@@ -72,7 +72,7 @@ public class Move<P> {
     }
 
     public Kind getKind() { return kind; }
-    public List getActions() { return actions; }
+    public List<Action<P>> getActions() { return actions; }
 
 
     /** Ritorna true se e solo se x è un oggetto di tipo {@link Move} ed ha gli

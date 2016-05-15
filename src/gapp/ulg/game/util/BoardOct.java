@@ -14,10 +14,10 @@ import java.util.*;
  * @param <P>  tipo del modello dei pezzi */
 public class BoardOct<P> implements Board<P> {
 
-    public final int width;
-    public final int height;
-    public final System system;
-    public final Map<Pos, P> positions;
+    private final int width;
+    private final int height;
+    private final System system;
+    private Map<Pos, P> positions;
 
     /** Crea una BoardOct con le dimensioni date (può quindi essere rettangolare).
      * Le posizioni della board sono tutte quelle comprese nel rettangolo dato e le
