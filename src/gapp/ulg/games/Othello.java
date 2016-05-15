@@ -69,7 +69,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * @param p2  il nome del secondo giocatore
      * @throws NullPointerException se {@code p1} o {@code p2} è null
      * @throws IllegalArgumentException se size non è uno dei valori 6,8,10 o 12 */
-    public Othello(long time, int size, String p1, String p2) {
+    public Othello(long time, int size, String p1, String p2) { //L'ASSEGNAZIONE DEL GR AI PLAYER DA UN ERRORE DI STACK OVERFLOW
         if(p1 == null || p2 == null) { throw new NullPointerException("Il player1 o il player2 è null"); }
         if(!Arrays.asList(6, 8, 10, 12).contains(size)) { throw new IllegalArgumentException("Size non è 6, 8, 10 o 12"); }
 
@@ -84,7 +84,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         board.put(new PieceModel(Species.DISC, "bianco"), new Pos((size/2)+1, (size/2)+1)); //B
         this.cT = 1; //Inizia il player1 (nero)
         this.gS = new ArrayList<>(); //SPERIMENTALE
-        for(Player i : Arrays.asList(player1, player2)) { i.setGame(copy()); } //Distribuisce una copia del gameruler ai giocatori
+        for(Player i : Arrays.asList(player1, player2)) { i.setGame(this); } //Distribuisce una copia del gameruler ai giocatori, tentativo con il "this"
     }
 
     /** Il nome rispetta il formato:
@@ -250,8 +250,8 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public GameRuler<PieceModel<Species>> copy() { //ERRORE DI STACK OVERFLOW, DA SISTEMARE!!
-        /*return new Othello(time, size, player1, player2, board, cT, gS);*/
+    public GameRuler<PieceModel<Species>> copy() {
+        //return new Othello(time, size, player1, player2, board, cT, gS); //Probabilmente non va bene perchè deve essere una copia dei valori (board ad es.)
         return null; //TEMPORANEO
     }
 
