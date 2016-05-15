@@ -83,7 +83,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         this.board.put(new PieceModel<>(Species.DISC, "bianco"), new Pos((size/2)+1, (size/2)+1)); //B
         this.cT = 1; //Inizia sempre il player1 (colore nero)
         this.gS = new ArrayList<>();
-        this.player1.setGame(this); this.player2.setGame(this); //Assegno una copia del gioco ai player
+        this.player1.setGame(this); this.player2.setGame(this); //Assegno una copia del gioco ai players
     }
 
     /** Il nome rispetta il formato:
