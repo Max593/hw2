@@ -44,7 +44,7 @@ public class PieceModel<S extends Enum<S>> implements Serializable {
      * @return true x se è uguale a questo modello di pezzo */
     @Override
     public boolean equals(Object x) {
-        return x instanceof PieceModel && ((PieceModel) x).getColor() == color && ((PieceModel) x).getSpecies() == species;
+        return x instanceof PieceModel && Objects.equals(((PieceModel) x).getColor(), color) && ((PieceModel) x).getSpecies() == species;
     }
 
     /** Ridefinito coerentemente con la ridefinizione di
