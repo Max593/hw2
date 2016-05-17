@@ -174,7 +174,8 @@ public class Action<P> {
      * @return hash code di questa azione */
     @Override
     public int hashCode() {
-        Set<Pos> sPos = new HashSet<>(pos);
+        Set<Pos> sPos = new HashSet<>();
+        sPos.addAll(pos);
         return Objects.hash(kind, piece, sPos, dir, steps);
     }
 }
