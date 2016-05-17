@@ -165,7 +165,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * {@link Action.Kind#ADD} seguita da una {@link Action} di tipo
      * {@link Action.Kind#SWAP}. */
     @Override
-    public Set<Move<PieceModel<Species>>> validMoves() { //Da errore, ma non ritorna eccezioni
+    public Set<Move<PieceModel<Species>>> validMoves() { //Il validmoves esce vuoto, trovare problema
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
         Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
@@ -173,22 +173,22 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         PieceModel<Species> pA = new PieceModel<>(Species.DISC, "bianco"), pP = new PieceModel<>(Species.DISC, "nero");
         if(cT == 2) { pA = new PieceModel<>(Species.DISC, "nero"); pP = new PieceModel<>(Species.DISC, "bianco"); } //Se sta giocando il player 2;
 
-        for(Pos p : board.positions()) { //Funziona ma non corrispondono i risultati
-            if(board.get(p) == null) { //Per ogni posizione vuota sulla board
-                List<Pos> swap = new ArrayList<>(); //Posizioni per lo swap dell'azione da questa posizione
-                for(Board.Dir d : directions) { //Per ogni direzione (usato in adjacent cansecutivi)
-                    if(board.adjacent(p, d) != null) { //Per evitare
+        for(Pos p : board.positions()) { //Per ogni posizione della board
+            if(board.get(p) == null) { //Per ogni posizione VUOTA sulla board
+                Set<Pos> swap = new HashSet<>(); //Posizioni per lo swap dell'azione da questa posizione
+                for(Board.Dir d : directions) { //Per ogni direzione (usato in adjacent consecutivi)
+                    if(board.adjacent(p, d) != null) { //Per evitare l'eccezione get(null)
                         if(board.get(board.adjacent(p, d)) == pA) { //Se in una della posizioni adiacenti è presente una pedina avversaria
                             for(Board.Dir d1 : directions) { //Per tutte le direzioni da quella posizione
-                                List<Pos> tempSwap = new ArrayList<>(); //Posizioni da aggiungere allo swap SE va tutto a buon fine
+                                Set<Pos> tempSwap = new HashSet<>(); //Posizioni da aggiungere allo swap SE va tutto a buon fine
                                 Pos nextPos = p; //Usato per l'adjacent
                                 while(board.get(nextPos).equals(pA)){ //Finchè incontra pedine avversarie
+                                    if(board.adjacent(nextPos, d1) == null) { tempSwap = new HashSet<>(); break; } //Se trova null, questa direzione non va bene e svuota la lista tem
                                     if(board.adjacent(nextPos, d1) != null) {
                                         nextPos = board.adjacent(nextPos, d1); //Aggiorna con la posizione adiacente in quella direzione
                                         if(board.get(nextPos).equals(pA)) { tempSwap.add(nextPos); }
                                         if(board.get(nextPos).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
                                     }
-                                    if(board.adjacent(nextPos, d1) == null) { tempSwap = new ArrayList<>(); break; } //Se trova null, questa direzione non va bene e svuota la lista tem
                                 }
                                 if(tempSwap.size() > 0) { swap.addAll(tempSwap); } //Aggiunge tutte le posizioni per la direzione corrente
                             }
