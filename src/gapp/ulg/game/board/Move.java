@@ -90,6 +90,8 @@ public class Move<P> {
      * @return hash code di questa mossa */
     @Override
     public int hashCode() {
-        return Objects.hash(kind, actions);
+        Set<Action> sAct = new HashSet<>();
+        sAct.addAll(actions);
+        return Objects.hash(kind, sAct);
     }
 }

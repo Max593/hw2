@@ -1,5 +1,6 @@
 package gapp.ulg.games;
 
+import com.sun.org.apache.xalan.internal.xsltc.dom.KeyIndex;
 import gapp.ulg.game.board.*;
 import gapp.ulg.game.util.BoardOct;
 import gapp.ulg.game.util.Utils;
@@ -177,30 +178,27 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             if(board.get(p) == null) { //Per ogni posizione VUOTA sulla board
                 Set<Pos> swap = new HashSet<>(); //Posizioni per lo swap dell'azione da questa posizione
                 for(Board.Dir d : directions) { //Per ogni direzione (usato in adjacent consecutivi)
-                    if(board.adjacent(p, d) != null) { //Per evitare l'eccezione get(null)
-                        if(board.get(board.adjacent(p, d)) == pA) { //Se in una della posizioni adiacenti è presente una pedina avversaria
-                            for(Board.Dir d1 : directions) { //Per tutte le direzioni da quella posizione
-                                Set<Pos> tempSwap = new HashSet<>(); //Posizioni da aggiungere allo swap SE va tutto a buon fine
-                                Pos nextPos = p; //Usato per l'adjacent
-                                while(board.get(nextPos).equals(pA)){ //Finchè incontra pedine avversarie
-                                    if(board.adjacent(nextPos, d1) == null) { tempSwap = new HashSet<>(); break; } //Se trova null, questa direzione non va bene e svuota la lista tem
-                                    if(board.adjacent(nextPos, d1) != null) {
-                                        nextPos = board.adjacent(nextPos, d1); //Aggiorna con la posizione adiacente in quella direzione
-                                        if(board.get(nextPos).equals(pA)) { tempSwap.add(nextPos); }
-                                        if(board.get(nextPos).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
-                                    }
-                                }
-                                if(tempSwap.size() > 0) { swap.addAll(tempSwap); } //Aggiunge tutte le posizioni per la direzione corrente
+                    if(board.adjacent(p, d) != null) { //Per evitare l'eccezione get(null) NON SEMBRA FUNZIONARE
+                        for(Board.Dir d1 : directions) { //Per tutte le direzioni da quella posizione
+                            Set<Pos> tempSwap = new HashSet<>(); //Posizioni da aggiungere allo swap SE va tutto a buon fine
+                            Pos nextPos = board.adjacent(p, d1); //Usato per l'adjacent
+                            while(nextPos != null){ //Finchè incontra pedine avversarie
+                                if(board.adjacent(nextPos, d1) == null) { tempSwap = new HashSet<>(); break; } //Se trova null, questa direzione non va bene e svuota lo swapTemp
+                                nextPos = board.adjacent(nextPos, d1); //Aggiorna con la posizione adiacente in quella direzione
+                                if(board.get(nextPos) == null) { tempSwap = new HashSet<>(); break; }
+                                if(board.get(nextPos).equals(pA)) { tempSwap.add(nextPos); }
+                                if(board.get(nextPos).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
                             }
-                        }
-                        if(swap.size() > 0){
-                            Pos[] swapArr = new Pos[swap.size()];
-                            swapArr = swap.toArray(swapArr);
-                            Action aA = new Action(p, pP);
-                            Action aS = new Action(pP, swapArr);
-                            moveSet.add(new Move(Arrays.asList(aA, aS)));
+                            if(tempSwap.size() != 0) { swap.addAll(tempSwap); } //Aggiunge tutte le posizioni per la direzione corrente
                         }
                     }
+                }
+                if(swap.size() > 0){
+                    Pos[] swapArr = new Pos[swap.size()];
+                    swapArr = swap.toArray(swapArr);
+                    Action aA = new Action(p, pP);
+                    Action aS = new Action(pP, swapArr);
+                    moveSet.add(new Move(Arrays.asList(aA, aS)));
                 }
             }
         }
