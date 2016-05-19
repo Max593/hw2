@@ -39,7 +39,13 @@ public class RandPlayer<P> implements Player<P> {
     }
 
     @Override
-    public void moved(int i, Move<P> m) { } //Da scrivere
+    public void moved(int i, Move<P> m) {
+        if(gameRul == null || gameRul.result() != -1) { throw new IllegalStateException("Nessun gioco impostato o ormai terminato"); }
+        if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
+        if(gameRul.players().size() < i || i <= 0 || !gameRul.isValid(m)) { throw new IllegalArgumentException("Indice di turnazione errato o la mossa non è consentita nella situazione di gioco attuale"); }
+
+
+    }
 
     @Override
     public Move<P> getMove() {

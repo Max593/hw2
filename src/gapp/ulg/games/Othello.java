@@ -132,11 +132,13 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         if(cT == 0) { throw new IllegalStateException("La partita è già terminata"); }
         if(isValid(m)) {
             for(Action i : m.getActions()) {
-                if(i.getKind() == Action.Kind.ADD) { board.put((PieceModel) i.getPiece(), (Pos) i.getPiece()); }
+                if(i.getKind() == Action.Kind.ADD) { board.put((PieceModel) i.getPiece(), (Pos) i.getPos().get(0)); }
                 if(i.getKind() == Action.Kind.SWAP) { for(Object p : i.getPos()) { board.put((PieceModel) i.getPiece(), (Pos) p); } }
             }
-            if(cT == 1) { cT = 2; }
-            cT = 1; //Passa il turno all'altro player
+            if(cT == 2) { cT = 1; } //Passa il turno all'altro player
+            cT = 2;
+            //Mancano delle azioni qui
+            player1.setGame(copy()); player2.setGame(copy());
             return true;
         }
         cT = 0; //Termina il game se la mossa non è valida.
@@ -166,7 +168,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * {@link Action.Kind#ADD} seguita da una {@link Action} di tipo
      * {@link Action.Kind#SWAP}. */
     @Override
-    public Set<Move<PieceModel<Species>>> validMoves() { //Il validmoves esce vuoto, trovare problema
+    public Set<Move<PieceModel<Species>>> validMoves() {
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
         Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
@@ -178,16 +180,14 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             if(board.get(p) == null) { //Per ogni posizione VUOTA sulla board
                 Set<Pos> swap = new HashSet<>(); //Posizioni per lo swap dell'azione da questa posizione
                 for(Board.Dir d : directions) { //Per ogni direzione (usato in adjacent consecutivi)
-                    if(board.adjacent(p, d) != null) { //Per evitare l'eccezione get(null) NON SEMBRA FUNZIONARE
+                    if(board.adjacent(p, d) != null) { //Per evitare l'eccezione get(null)
                         for(Board.Dir d1 : directions) { //Per tutte le direzioni da quella posizione
                             Set<Pos> tempSwap = new HashSet<>(); //Posizioni da aggiungere allo swap SE va tutto a buon fine
                             Pos nextPos = board.adjacent(p, d1); //Usato per l'adjacent
-                            while(nextPos != null){ //Finchè incontra pedine avversarie
-                                if(board.adjacent(nextPos, d1) == null) { tempSwap = new HashSet<>(); break; } //Se trova null, questa direzione non va bene e svuota lo swapTemp
-                                nextPos = board.adjacent(nextPos, d1); //Aggiorna con la posizione adiacente in quella direzione
-                                if(board.get(nextPos) == null) { tempSwap = new HashSet<>(); break; }
-                                if(board.get(nextPos).equals(pA)) { tempSwap.add(nextPos); }
+                            while(nextPos != null){ //Finchè cammina su posizioni della board
+                                if(board.get(nextPos) == null) { tempSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tempSwap e interrompe il ciclo
                                 if(board.get(nextPos).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
+                                if(board.get(nextPos).equals(pA)) { tempSwap.add(nextPos); nextPos = board.adjacent(nextPos, d1); } //Aggiunge la Pos alla tempSwap e aggiorna la nextPos
                             }
                             if(tempSwap.size() != 0) { swap.addAll(tempSwap); } //Aggiunge tutte le posizioni per la direzione corrente
                         }
@@ -219,8 +219,16 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public GameRuler<PieceModel<Species>> copy() { //Da testare, validmoves ancora non funziona
-        Board bCopy = board;
+    public GameRuler<PieceModel<Species>> copy() {
+        Board bCopy = new BoardOct(size, size);
+        for(int i = 0; i < size; i++) {
+            for(int h = 0; h < size; h++) {
+                Pos p = new Pos(i, h);
+                if(board.get(p) != null) {
+                    bCopy.put(board.get(p), p);
+                }
+            }
+        }
         return new Othello(time, size, player1, player2, bCopy, cT, gS);
     }
 
