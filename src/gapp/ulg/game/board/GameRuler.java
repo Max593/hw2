@@ -111,7 +111,7 @@ public interface GameRuler<P> {
     default boolean isValid(Move<P> m) {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(result() > -1) { throw new IllegalStateException("Il gioco è terminato"); }
-        if(validMoves().contains(m)) { return true; } return false; }
+        return validMoves().contains(m); }
 
     /** Ritorna l'insieme delle mosse valide relative alla posizione p. Se nella
      * posizione p c'è un (modello di) pezzo, ritorna tutte le mosse valide che

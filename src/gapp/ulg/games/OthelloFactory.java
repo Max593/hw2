@@ -15,6 +15,8 @@ import java.util.List;
  * Una OthelloFactory è una fabbrica di {@link GameRuler} per giocare a Othello.
  * I {@link GameRuler} fabbricati dovrebbero essere oggetti {@link Othello}. */
 public class OthelloFactory implements GameFactory<GameRuler<PieceModel<Species>>> {
+    private String[] pNames;
+
     /** Crea una fattoria di {@link GameRuler} per giocare a Othello */
     public OthelloFactory() { }
 
@@ -43,17 +45,18 @@ public class OthelloFactory implements GameFactory<GameRuler<PieceModel<Species>
      * @return la lista con i due parametri */
     @Override
     @SuppressWarnings("unchecked")
-    public List<Param<?>> params() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
-    }
+    public List<Param<?>> params() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); } //DA FARE!
 
     @Override
     public void setPlayerNames(String... names) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        for(String i : names) { if(i == null) { throw new NullPointerException("Uno dei nomi è null"); } }
+        if(names.length != 2) { throw new IllegalArgumentException("Numero di player non consono alla modalità di gioco"); }
+        pNames = names;
     }
 
     @Override
     public GameRuler<PieceModel<Species>> newGame() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(pNames == null) { throw new IllegalStateException("Nomi dei player non impostati"); }
+        return new Othello(pNames[0], pNames[1]);
     }
 }

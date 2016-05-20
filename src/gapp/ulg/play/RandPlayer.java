@@ -5,6 +5,7 @@ import gapp.ulg.game.board.Move;
 import gapp.ulg.game.board.Player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -39,12 +40,11 @@ public class RandPlayer<P> implements Player<P> {
     }
 
     @Override
-    public void moved(int i, Move<P> m) {
+    public void moved(int i, Move<P> m) { //Ancora non funzionante
         if(gameRul == null || gameRul.result() != -1) { throw new IllegalStateException("Nessun gioco impostato o ormai terminato"); }
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
-        if(gameRul.players().size() < i || i <= 0 || !gameRul.isValid(m)) { throw new IllegalArgumentException("Indice di turnazione errato o la mossa non è consentita nella situazione di gioco attuale"); }
-
-        gameRul.move(m);
+        if(!Arrays.asList(1, 2).contains(i) || !gameRul.isValid(m)) { throw new IllegalArgumentException("Indice di turnazione errato o la mossa non è consentita nella situazione di gioco attuale"); }
+        ;
     }
 
     @Override

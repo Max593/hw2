@@ -1,6 +1,5 @@
 package gapp.ulg.games;
 
-import com.sun.org.apache.xalan.internal.xsltc.dom.KeyIndex;
 import gapp.ulg.game.board.*;
 import gapp.ulg.game.util.BoardOct;
 import gapp.ulg.game.util.Utils;
@@ -109,7 +108,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     public String color(String name) {
         if(name == null) { throw new NullPointerException("name non può essere null"); }
         if(!players().contains(name)) { throw new IllegalArgumentException("Inserire il nome di un player presente in partita"); }
-        if(name == player1.name()) { return "nero"; }
+        if(player1.name().equals(name)) { return "nero"; }
         return "bianco"; //Unica altra possibilità
     }
 
@@ -121,21 +120,16 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * non ha mosse valide, la partita termina. */
     @Override
     public int turn() {
-        if(cT == 1 && validMoves().size() == 0) {
-            cT = 2;
-            if(validMoves().size() == 0) {
+        int other = 1;
+        if(cT == 1) { other = 2; }
+        if(validMoves().size() == 0) {
+            cT = other;
+            if (validMoves().size() == 0) {
                 cT = 0;
                 return cT;
             }
         }
-        if(cT == 2 && validMoves().size() == 0) {
-            cT = 1;
-            if(validMoves().size() == 0) {
-                cT = 0;
-                return cT;
-            }
-        }
-        return cT; //Incompleto
+        return cT;
     }
 
     /** Se la mossa non è valida termina il gioco dando la vittoria all'altro
@@ -151,8 +145,6 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             }
             if(cT == 2) { cT = 1; } //Passa il turno all'altro player
             cT = 2;
-            //Mancano delle azioni qui
-            player1.setGame(copy()); player2.setGame(copy());
             return true;
         }
         cT = 0; //Termina il game se la mossa non è valida.
@@ -217,7 +209,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             }
         }
         if(moveSet.size() > 0) { moveSet.add(new Move(Move.Kind.RESIGN)); }
-        return moveSet;
+        return Collections.unmodifiableSet(moveSet);
     }
 
     @Override
