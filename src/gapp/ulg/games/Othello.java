@@ -120,9 +120,23 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * automaticamente passato all'altro giocatore. Ma se anche l'altro giuocatore
      * non ha mosse valide, la partita termina. */
     @Override
-    public int turn() { //Attualmente non funzionante, ritorna solo il turno corrente
-        return cT;
-    } //Da completare
+    public int turn() {
+        if(cT == 1 && validMoves().size() == 0) {
+            cT = 2;
+            if(validMoves().size() == 0) {
+                cT = 0;
+                return cT;
+            }
+        }
+        if(cT == 2 && validMoves().size() == 0) {
+            cT = 1;
+            if(validMoves().size() == 0) {
+                cT = 0;
+                return cT;
+            }
+        }
+        return cT; //Incompleto
+    }
 
     /** Se la mossa non è valida termina il gioco dando la vittoria all'altro
      * giocatore. */

@@ -44,7 +44,7 @@ public class RandPlayer<P> implements Player<P> {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(gameRul.players().size() < i || i <= 0 || !gameRul.isValid(m)) { throw new IllegalArgumentException("Indice di turnazione errato o la mossa non è consentita nella situazione di gioco attuale"); }
 
-
+        gameRul.move(m);
     }
 
     @Override
