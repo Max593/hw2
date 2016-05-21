@@ -166,9 +166,10 @@ public class Action<P> {
      * @return true se x è uguale a questa azione */
     @Override
     public boolean equals(Object x) {
-        if(x instanceof Action && Objects.equals(((Action) x).getKind(),kind) &&
-                Objects.equals(((Action) x).getPiece(),piece) && ((Action) x).getPos().containsAll(pos) &&
-                Objects.equals(((Action) x).getDir(),dir) && Objects.equals(((Action) x).getSteps(),steps)) { return true; } return false; }
+        return x instanceof Action && Objects.equals(((Action) x).getKind(), kind) &&
+                Objects.equals(((Action) x).getPiece(), piece) && ((Action) x).getPos().containsAll(pos) &&
+                Objects.equals(((Action) x).getDir(), dir) && Objects.equals(((Action) x).getSteps(), steps);
+    }
 
     /** Ridefinito coerentemente alla ridefinizione di {@link Action#equals(Object)}.
      * @return hash code di questa azione */

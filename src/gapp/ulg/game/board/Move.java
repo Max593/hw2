@@ -82,7 +82,7 @@ public class Move<P> {
     @Override
     public boolean equals(Object x) {
         return x instanceof Move && Objects.equals(((Move) x).getKind(), kind) &&
-                Objects.equals(((Move) x).getActions(), actions);
+                ((Move) x).getActions().containsAll(actions);
     }
 
     /** Ridefinito coerentemente con la ridefinizione di
