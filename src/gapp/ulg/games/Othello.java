@@ -78,10 +78,10 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         this.size = size;
         this.player1 = new RandPlayer<>(p1); this.player2 = new RandPlayer<>(p2);
         this.board = new BoardOct<>(size, size);
-        this.board.put(new PieceModel<>(Species.DISC, "bianco"), new Pos((size/2)-1, size/2)); //B 4,5
-        this.board.put(new PieceModel<>(Species.DISC, "nero"), new Pos(size/2, size/2)); //N 5,5
-        this.board.put(new PieceModel<>(Species.DISC, "nero"), new Pos((size/2)-1, (size/2)-1)); //N 4,4
-        this.board.put(new PieceModel<>(Species.DISC, "bianco"), new Pos((size/2), (size/2)-1)); //B 5,4
+        this.board.put(new PieceModel<>(Species.DISC, "bianco"), new Pos((size/2)-1, size/2)); //B 3,4
+        this.board.put(new PieceModel<>(Species.DISC, "nero"), new Pos(size/2, size/2)); //N 4,4
+        this.board.put(new PieceModel<>(Species.DISC, "nero"), new Pos((size/2)-1, (size/2)-1)); //N 3,3
+        this.board.put(new PieceModel<>(Species.DISC, "bianco"), new Pos((size/2), (size/2)-1)); //B 4,3
         this.cT = 1; //Inizia sempre il player1 (colore nero)
         this.gS = new ArrayList<>();
         this.player1.setGame(this); this.player2.setGame(this); //Assegno una copia del gioco ai players
@@ -174,7 +174,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * {@link Action.Kind#ADD} seguita da una {@link Action} di tipo
      * {@link Action.Kind#SWAP}. */
     @Override
-    public Set<Move<PieceModel<Species>>> validMoves() {
+    public Set<Move<PieceModel<Species>>> validMoves() { //Va riscritto con il try, dalla terza mossa in poi sbaglia
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
         Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
@@ -252,8 +252,8 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     public Mechanics<PieceModel<Species>> mechanics() { return null; } //TEMPORANEO
 }
 
-/* COPIA IN VISTA DI MODIFICHE
-public Set<Move<PieceModel<Species>>> validMoves() {
+/*
+public Set<Move<PieceModel<Species>>> validMoves() { //Va riscritto con il try, dalla terza mossa in poi sbaglia
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
         Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
