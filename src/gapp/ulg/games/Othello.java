@@ -4,6 +4,7 @@ import gapp.ulg.game.board.*;
 import gapp.ulg.game.util.BoardOct;
 import gapp.ulg.game.util.Utils;
 import gapp.ulg.play.RandPlayer;
+import gapp.ulg.test.CheckStampa;
 
 import static gapp.ulg.game.board.PieceModel.Species;
 
@@ -147,23 +148,42 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             }
             if(cT == 2) { cT = 1; } //Passa il turno all'altro player
             else if(cT == 1) { cT = 2; }
+            gS.add(copy());
             return true;
         }
         if(m.getKind() == Move.Kind.RESIGN) {
             if(cT == 2) { forced = 1; }
             else if(cT == 1) { forced = 2; }
             cT = 0;
+            gS.add(copy());
             return true;
         }
         if(cT == 2) { forced = 1; }
         else if(cT == 1) { forced = 2; }
         cT = 0; //Termina il game se la mossa non è valida.
+        gS.add(copy());
         return false;
     }
 
     @Override
-    public boolean unMove() {
-        return false; //TEMPORANEO
+    public boolean unMove() { //Continua a tornare un errore sulla board unMove
+        if(gS.size() == 0) { return false; }
+
+        this.board = new BoardOct<>(size, size);
+        for(int i = 0; i < size; i++) {
+            for(int h = 0; h < size; h++) {
+                if(gS.get(gS.size()-1).getBoard().get(new Pos(i,h)) != null) {
+                    this.board.put(gS.get(gS.size()-1).getBoard().get(new Pos(i,h)), new Pos(i,h));
+                }
+            }
+        }
+        if(cT == 2) { cT = 1; } //Passa il turno all'altro player
+        else if(cT == 1) { cT = 2; }
+        else if(forced == 2) { cT = forced-1; forced = -1; }
+        else if(forced == 1) { cT = forced+1; forced = -1; }
+        player1.setGame(copy()); player2.setGame(copy()); //Resetta i players nella situazione pre-mossa
+
+        return true;
     }
 
     @Override
@@ -204,9 +224,9 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                         if(board.get(board.adjacent(p, d)).equals(pA)) {
                             Pos next = board.adjacent(p, d);
                             while(true) {
-                                if(board.adjacent(next,d) == null) { tSwap = new HashSet<>(); break; }
                                 if(board.get(next) == null) { tSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tSwap e interrompe il ciclo
                                 if(board.get(next).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
+                                if(board.adjacent(next,d) == null) { tSwap = new HashSet<>(); break; } //Se va uscendo dalla board
                                 if(board.get(next).equals(pA)) { tSwap.add(next); next = board.adjacent(next, d); } //Aggiunge la Pos alla tSwap e aggiorna next
                             }
                         }
