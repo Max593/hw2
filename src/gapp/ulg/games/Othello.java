@@ -52,6 +52,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     private Player<PieceModel<Species>> player2;
     private Board<PieceModel<Species>> board;
     private int cT; //Turno corrente
+    private int forced; //In caso di resa o mossa invalida forza la vittoria di un player senza considerare il punteggio
     private List<GameRuler<PieceModel<Species>>> gS;
 
     /** Crea un GameRuler per fare una partita a Othello, equivalente a
@@ -83,6 +84,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         this.board.put(new PieceModel<>(Species.DISC, "nero"), new Pos((size/2)-1, (size/2)-1)); //N 3,3
         this.board.put(new PieceModel<>(Species.DISC, "bianco"), new Pos((size/2), (size/2)-1)); //B 4,3
         this.cT = 1; //Inizia sempre il player1 (colore nero)
+        this.forced = -1;
         this.gS = new ArrayList<>();
         this.player1.setGame(this); this.player2.setGame(this); //Assegno una copia del gioco ai players
     }
@@ -138,17 +140,25 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     public boolean move(Move<PieceModel<Species>> m) {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(cT == 0) { throw new IllegalStateException("La partita è già terminata"); }
-        if(isValid(m)) {
+        if(isValid(m) && m.getKind() != Move.Kind.RESIGN) {
             for(Action i : m.getActions()) {
                 if(i.getKind() == Action.Kind.ADD) { board.put((PieceModel) i.getPiece(), (Pos) i.getPos().get(0)); }
                 if(i.getKind() == Action.Kind.SWAP) { for(Object p : i.getPos()) { board.put((PieceModel) i.getPiece(), (Pos) p); } }
             }
             if(cT == 2) { cT = 1; } //Passa il turno all'altro player
-            cT = 2;
+            else if(cT == 1) { cT = 2; }
             return true;
         }
+        if(m.getKind() == Move.Kind.RESIGN) {
+            if(cT == 2) { forced = 1; }
+            else if(cT == 1) { forced = 2; }
+            cT = 0;
+            return true;
+        }
+        if(cT == 2) { forced = 1; }
+        else if(cT == 1) { forced = 2; }
         cT = 0; //Termina il game se la mossa non è valida.
-        return false; //Non so come far vincere l'altro player
+        return false;
     }
 
     @Override
@@ -165,9 +175,12 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     @Override
     public int result() {
         if(cT != 0) { return -1; }
-        if(score(1) == score(2)) { return 0; }
-        if(score(1) > score(2)) { return 1; }
-        return 2; //Unico caso rimasto
+        if(forced != -1) {
+            return forced;
+        }
+        else if(score(1) == score(2)) { return 0; }
+        else if(score(1) > score(2)) { return 1; }
+        return 2;
     }
 
     /** Ogni mossa, eccetto l'abbandono, è rappresentata da una {@link Action} di tipo
@@ -183,23 +196,24 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         if(cT == 2) { pA = new PieceModel<>(Species.DISC, "nero"); pP = new PieceModel<>(Species.DISC, "bianco"); } //Se sta giocando il player 2;
 
         for(Pos p : board.positions()) { //Per ogni posizione della board
-            if(board.get(p) == null) { //Per ogni posizione VUOTA sulla board
-                Set<Pos> swap = new HashSet<>(); //Posizioni per lo swap dell'azione da questa posizione
-                for(Board.Dir d : directions) { //Per ogni direzione (usato in adjacent consecutivi)
-                    if(board.adjacent(p, d) != null) { //Per evitare l'eccezione get(null)
-                        for(Board.Dir d1 : directions) { //Per tutte le direzioni da quella posizione
-                            Set<Pos> tempSwap = new HashSet<>(); //Posizioni da aggiungere allo swap SE va tutto a buon fine
-                            Pos nextPos = board.adjacent(p, d1); //Usato per l'adjacent
-                            while(nextPos != null){ //Finchè cammina su posizioni della board
-                                if(board.get(nextPos) == null) { tempSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tempSwap e interrompe il ciclo
-                                if(board.get(nextPos).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
-                                if(board.get(nextPos).equals(pA)) { tempSwap.add(nextPos); nextPos = board.adjacent(nextPos, d1); } //Aggiunge la Pos alla tempSwap e aggiorna la nextPos
+            if(board.get(p) == null) {
+                Set<Pos> swap = new HashSet<>();
+                for(Board.Dir d : directions) {
+                    Set<Pos> tSwap = new HashSet<>();
+                    try {
+                        if(board.get(board.adjacent(p, d)).equals(pA)) {
+                            Pos next = board.adjacent(p, d);
+                            while(true) {
+                                if(board.adjacent(next,d) == null) { tSwap = new HashSet<>(); break; }
+                                if(board.get(next) == null) { tSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tSwap e interrompe il ciclo
+                                if(board.get(next).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
+                                if(board.get(next).equals(pA)) { tSwap.add(next); next = board.adjacent(next, d); } //Aggiunge la Pos alla tSwap e aggiorna next
                             }
-                            if(tempSwap.size() != 0) { swap.addAll(tempSwap); } //Aggiunge tutte le posizioni per la direzione corrente
                         }
-                    }
+                    } catch (NullPointerException e) { continue; }
+                    if(tSwap.size() > 0) { swap.addAll(tSwap); }
                 }
-                if(swap.size() > 0){
+                if(swap.size() > 0) {
                     Pos[] swapArr = new Pos[swap.size()];
                     swapArr = swap.toArray(swapArr);
                     Action aA = new Action(p, pP);
@@ -235,59 +249,20 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                 }
             }
         }
-        return new Othello(time, size, player1, player2, bCopy, cT, gS);
+        return new Othello(time, size, player1, player2, bCopy, cT, forced, gS);
     }
 
-    private Othello(long t, int s, Player p1, Player p2, Board b, int cT, List gS) {
+    private Othello(long t, int s, Player p1, Player p2, Board b, int cT, int forced, List gS) {
         this.time = t;
         this.size = s;
         this.player1 = p1;
         this.player2 = p2;
         this.board = b;
         this.cT = cT;
+        this.forced = forced;
         this.gS = gS;
     }
 
     @Override
     public Mechanics<PieceModel<Species>> mechanics() { return null; } //TEMPORANEO
 }
-
-/*
-public Set<Move<PieceModel<Species>>> validMoves() { //Va riscritto con il try, dalla terza mossa in poi sbaglia
-        if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
-        Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
-        List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
-                Board.Dir.DOWN_L, Board.Dir.DOWN, Board.Dir.DOWN_R, Board.Dir.RIGHT, Board.Dir.UP_R);
-        PieceModel<Species> pA = new PieceModel<>(Species.DISC, "bianco"), pP = new PieceModel<>(Species.DISC, "nero");
-        if(cT == 2) { pA = new PieceModel<>(Species.DISC, "nero"); pP = new PieceModel<>(Species.DISC, "bianco"); } //Se sta giocando il player 2;
-
-        for(Pos p : board.positions()) { //Per ogni posizione della board
-            if(board.get(p) == null) { //Per ogni posizione VUOTA sulla board
-                Set<Pos> swap = new HashSet<>(); //Posizioni per lo swap dell'azione da questa posizione
-                for(Board.Dir d : directions) { //Per ogni direzione (usato in adjacent consecutivi)
-                    if(board.adjacent(p, d) != null) { //Per evitare l'eccezione get(null)
-                        for(Board.Dir d1 : directions) { //Per tutte le direzioni da quella posizione
-                            Set<Pos> tempSwap = new HashSet<>(); //Posizioni da aggiungere allo swap SE va tutto a buon fine
-                            Pos nextPos = board.adjacent(p, d1); //Usato per l'adjacent
-                            while(nextPos != null){ //Finchè cammina su posizioni della board
-                                if(board.get(nextPos) == null) { tempSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tempSwap e interrompe il ciclo
-                                if(board.get(nextPos).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
-                                if(board.get(nextPos).equals(pA)) { tempSwap.add(nextPos); nextPos = board.adjacent(nextPos, d1); } //Aggiunge la Pos alla tempSwap e aggiorna la nextPos
-                            }
-                            if(tempSwap.size() != 0) { swap.addAll(tempSwap); } //Aggiunge tutte le posizioni per la direzione corrente
-                        }
-                    }
-                }
-                if(swap.size() > 0){
-                    Pos[] swapArr = new Pos[swap.size()];
-                    swapArr = swap.toArray(swapArr);
-                    Action aA = new Action(p, pP);
-                    Action aS = new Action(pP, swapArr);
-                    moveSet.add(new Move(Arrays.asList(aA, aS)));
-                }
-            }
-        }
-        if(moveSet.size() > 0) { moveSet.add(new Move(Move.Kind.RESIGN)); }
-        return Collections.unmodifiableSet(moveSet);
-    }
- */

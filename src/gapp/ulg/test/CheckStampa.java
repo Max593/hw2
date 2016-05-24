@@ -22,9 +22,11 @@ public class CheckStampa {
 
         while(k < 10) {
             if(eqBoard(o1.getBoard(), bArr[k])){
+                System.out.println("Turn di Othello:"+o1.turn()+" Turn del grader:"+mArr[k].split("\\s")[0]);
                 valMprinter(o1.validMoves());
                 System.out.println(vmArr[k]);
                 if(checkValidMoves(o1.validMoves(),vmArr[k])) { System.out.println("Valid Moves della mossa "+(k+1)+" OK"); }
+                System.out.println("Eseguo "+mArr[k].split("\\s")[1]);
                 printer(bArr[k+1]);
                 o1.move(stringToMove(null, mArr[k].split("\\s")[1]));
                 printer(o1.getBoard());
