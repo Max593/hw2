@@ -4,7 +4,6 @@ import gapp.ulg.game.board.*;
 import gapp.ulg.game.util.BoardOct;
 import gapp.ulg.game.util.Utils;
 import gapp.ulg.play.RandPlayer;
-import gapp.ulg.test.CheckStampa;
 
 import static gapp.ulg.game.board.PieceModel.Species;
 
@@ -122,18 +121,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * automaticamente passato all'altro giocatore. Ma se anche l'altro giuocatore
      * non ha mosse valide, la partita termina. */
     @Override
-    public int turn() {
-        int other = 1;
-        if(cT == 1) { other = 2; }
-        if(validMoves().size() == 0) {
-            cT = other;
-            if (validMoves().size() == 0) {
-                cT = 0;
-                return cT;
-            }
-        }
-        return cT;
-    }
+    public int turn() { return cT; }
 
     /** Se la mossa non è valida termina il gioco dando la vittoria all'altro
      * giocatore. */
@@ -149,6 +137,11 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             if(cT == 2) { cT = 1; } //Passa il turno all'altro player
             else if(cT == 1) { cT = 2; }
             gS.add(copy());
+            if(validMoves().isEmpty()) { //Non dovrebbe stare dentro il turn?? (funziona però)
+                if(cT == 2) { cT = 1; } //Passa il turno all'altro player
+                else if(cT == 1) { cT = 2; }
+                if(validMoves().isEmpty()) { cT = 0; }
+            }
             return true;
         }
         if(m.getKind() == Move.Kind.RESIGN) {
@@ -195,19 +188,17 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     @Override
     public int result() {
         if(cT != 0) { return -1; }
-        if(forced != -1) {
-            return forced;
-        }
-        else if(score(1) == score(2)) { return 0; }
+        else if(forced > -1) { return forced; }
         else if(score(1) > score(2)) { return 1; }
-        return 2;
+        else if(score(1) == score(2)) { return 0; }
+        else return 2;
     }
 
     /** Ogni mossa, eccetto l'abbandono, è rappresentata da una {@link Action} di tipo
      * {@link Action.Kind#ADD} seguita da una {@link Action} di tipo
      * {@link Action.Kind#SWAP}. */
     @Override
-    public Set<Move<PieceModel<Species>>> validMoves() { //Va riscritto con il try, dalla terza mossa in poi sbaglia
+    public Set<Move<PieceModel<Species>>> validMoves() {
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
         Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
@@ -253,9 +244,8 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         int score1 = board.get(new PieceModel<>(Species.DISC, "nero")).size();
         int score2 = board.get(new PieceModel<>(Species.DISC, "bianco")).size();
 
-        if(score1 == score2) { return 0; } //Parità
-        if(score1 > score2) { return 1; } //Vittoria del player1
-        return 2; //Unica altra possibilità, vittoria player2
+        if(i == 1) { return score1; }
+        return score2;
     }
 
     @Override

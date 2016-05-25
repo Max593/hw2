@@ -1,5 +1,6 @@
 package gapp.ulg.test;
 
+//Sostituire ASSOLUTAMENTE questo PartialGrade
 
 import gapp.ulg.game.board.*;
 import gapp.ulg.game.util.BoardOct;
@@ -67,15 +68,15 @@ public class PartialGrade {
     /**************************   G R A D E  1   ******************************/
 
     private static boolean gradeTest1(boolean ok) {
-        if (ok) ok = test_Pos(0.2f, 500);
-        if (ok) ok = test_PieceModel(0.2f, 500);
-        if (ok) ok = test_BoardDef(0.8f, 500);
-        if (ok) ok = test_Action(1f, 500);
-        if (ok) ok = test_Move(0.6f, 500);
-        if (ok) ok = test_GameRulerDef(0.8f, 500);
-        if (ok) ok = test_BoardOct(1f, 1000);
-        if (ok) ok = test_UnmodifiableBoard(0.6f, 500);
-        if (ok) ok = test_PlayRandPlayer(0.8f, 1000);
+        if (ok) ok = test_Pos(0.2f, 30000);
+        if (ok) ok = test_PieceModel(0.2f, 30000);
+        if (ok) ok = test_BoardDef(0.8f, 30000);
+        if (ok) ok = test_Action(1f, 30000);
+        if (ok) ok = test_Move(0.6f, 30000);
+        if (ok) ok = test_GameRulerDef(0.8f, 30000);
+        if (ok) ok = test_BoardOct(1f, 30000);
+        if (ok) ok = test_UnmodifiableBoard(0.6f, 30000);
+        if (ok) ok = test_PlayRandPlayer(0.8f, 30000);
         return ok;
     }
 
@@ -446,13 +447,13 @@ public class PartialGrade {
     private static boolean gradeTest2(boolean ok) {
         if (ok) ok = test_DGameInit(0.2f, 1000, "Othello", 8,8, () -> new Othello(PP[0],PP[1]),
                 new int[]{4,4, 3,3}, new int[]{3,4, 4,3});
-        if (ok) ok = test_DGame(0.2f, 1000, "Othello", 8,8, "1", G_OTH8_1, () -> new Othello(PP[0],PP[1]));
-        if (ok) ok = test_DGame(0.4f, 2000, "Othello", 8,8, "2", G_OTH8_2, () -> new Othello(PP[0],PP[1]));
-        if (ok) ok = test_DGame(0.8f, 2000, "Othello", 6,6, "3", G_OTH6, () -> new Othello(-1,6,PP[0],PP[1]));
-        if (ok) ok = test_DGameUnMove(0.8f, 2000, "Othello", 8,8, G_OTH8_1, () -> new Othello(PP[0],PP[1]));
-        if (ok) ok = test_DGameCopy(0.4f, 1000, "Othello", 8,8, G_OTH8_1, () -> new Othello(PP[0],PP[1]));
-        if (ok) ok = test_PlayDGameFRandPlayer(0.4f, 2000, "OthelloFactory", null, OthelloFactory::new);
-        if (ok) ok = test_Mix(0.8f, 1000);
+        if (ok) ok = test_DGame(0.2f, 30000, "Othello", 8,8, "1", G_OTH8_1, () -> new Othello(PP[0],PP[1]));
+        if (ok) ok = test_DGame(0.4f, 30000, "Othello", 8,8, "2", G_OTH8_2, () -> new Othello(PP[0],PP[1]));
+        if (ok) ok = test_DGame(0.8f, 30000, "Othello", 6,6, "3", G_OTH6, () -> new Othello(-1,6,PP[0],PP[1]));
+        if (ok) ok = test_DGameUnMove(0.8f, 30000, "Othello", 8,8, G_OTH8_1, () -> new Othello(PP[0],PP[1]));
+        if (ok) ok = test_DGameCopy(0.4f, 30000, "Othello", 8,8, G_OTH8_1, () -> new Othello(PP[0],PP[1]));
+        if (ok) ok = test_PlayDGameFRandPlayer(0.4f, 30000, "OthelloFactory", null, OthelloFactory::new);
+        if (ok) ok = test_Mix(0.8f, 30000);
         return ok;
     }
 
@@ -506,7 +507,8 @@ public class PartialGrade {
                 while (true) {
                     String sb = game[k++];
                     if (sb.length() != w * h) {
-                        if (Integer.parseInt(sb) != gR.result()) return err("result()");
+                        if (Integer.parseInt(sb) != gR.result()) return err("result()"
+                                +gR.result()+" "+Integer.parseInt(sb)); //Extra da eliminare
                         break;
                     }
                     if (!eqBoard(board, sb)) return err("board");
@@ -742,12 +744,12 @@ public class PartialGrade {
     /******************************************************************************/
 
     private static boolean gradeTest3(boolean ok) {
-        if (ok) ok = test_DGameInit(0.4f, 200, "Othello", 10,10, () -> new Othello(-1,10,PP[0],PP[1]),
+        if (ok) ok = test_DGameInit(0.4f, 30000, "Othello", 10,10, () -> new Othello(-1,10,PP[0],PP[1]),
                 new int[]{5,5, 4,4}, new int[]{4,5, 5,4});
-        if (ok) ok = test_DGame(0.5f, 200, "Othello", 12,12, "4", G_OTH12, () -> new Othello(-1,12,PP[0],PP[1]));
-        if (ok) ok = test_DGameUnMove(0.8f, 400, "Othello", 6,6, G_OTH6, () -> new Othello(-1,6,PP[0],PP[1]));
-        if (ok) ok = test_DGameCopy(0.8f, 200, "Othello", 12,12, G_OTH12, () -> new Othello(-1,12,PP[0],PP[1]));
-        if (ok) ok = test_DGame(0.4f, 200, "Othello from factory", 12,12, "5", G_OTH12,
+        if (ok) ok = test_DGame(0.5f, 30000, "Othello", 12,12, "4", G_OTH12, () -> new Othello(-1,12,PP[0],PP[1]));
+        if (ok) ok = test_DGameUnMove(0.8f, 30000, "Othello", 6,6, G_OTH6, () -> new Othello(-1,6,PP[0],PP[1]));
+        if (ok) ok = test_DGameCopy(0.8f, 30000, "Othello", 12,12, G_OTH12, () -> new Othello(-1,12,PP[0],PP[1]));
+        if (ok) ok = test_DGame(0.4f, 30000, "Othello from factory", 12,12, "5", G_OTH12,
                 () -> {
                     GameFactory<GameRuler<PieceModel<Species>>> gF = new OthelloFactory();
                     gF.params().get(1).set("12x12");

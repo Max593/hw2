@@ -57,7 +57,6 @@ public class RandPlayer<P> implements Player<P> {
         List temp = new ArrayList<>();
         temp.addAll(gameRul.validMoves());
         Random rand = new Random();
-        //return (Move) temp.get(rand.nextInt(temp.size())); } //Mossa random
         Move<P> m = (Move) temp.get(rand.nextInt(temp.size()));
         while (m.getKind() == Move.Kind.RESIGN) { m = (Move) temp.get(rand.nextInt(temp.size())); } //Evita che la mossa sia di tipo RESIGN
         return m;
