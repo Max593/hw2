@@ -86,6 +86,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         this.cT = 1; //Inizia sempre il player1 (colore nero)
         this.forced = -1;
         this.gS = new ArrayList<>();
+        gS.add(copy());
         this.player1.setGame(this); this.player2.setGame(this); //Assegno una copia del gioco ai players
     }
 
@@ -160,22 +161,22 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
     @Override
     public boolean unMove() { //Continua a tornare un errore sulla board unMove
-        if(gS.size() == 0) { return false; }
+        if(gS.size() == 1) { return false; } //Se abbiamo appena iniziato il gioco
 
-        this.board = new BoardOct<>(size, size);
+        Board past = gS.get(gS.size()-2).getBoard();
         for(int i = 0; i < size; i++) {
             for(int h = 0; h < size; h++) {
-                if(gS.get(gS.size()-1).getBoard().get(new Pos(i,h)) != null) {
-                    this.board.put(gS.get(gS.size()-1).getBoard().get(new Pos(i,h)), new Pos(i,h));
+                Pos p = new Pos(i,h);
+                if(past.get(p) == null) { board.remove(p); }
+                if(board.get(p) != null) {
+                    if(past.get(p) != null) { board.put((PieceModel) past.get(p), p); }
                 }
             }
         }
-        if(cT == 2) { cT = 1; } //Passa il turno all'altro player
-        else if(cT == 1) { cT = 2; }
-        else if(forced == 2) { cT = forced-1; forced = -1; }
-        else if(forced == 1) { cT = forced+1; forced = -1; }
-        player1.setGame(copy()); player2.setGame(copy()); //Resetta i players nella situazione pre-mossa
 
+        cT = gS.get(gS.size()-2).turn();
+        gS.remove(gS.size()-1);
+        player1.setGame(copy()); player2.setGame(copy());
         return true;
     }
 
@@ -250,16 +251,23 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
     @Override
     public GameRuler<PieceModel<Species>> copy() {
+        Board bCopy = bCopy(board);
+
+        return new Othello(time, size, player1, player2, bCopy, cT, forced, gS);
+    }
+
+    private Board bCopy(Board b) {
         Board bCopy = new BoardOct(size, size);
         for(int i = 0; i < size; i++) {
             for(int h = 0; h < size; h++) {
                 Pos p = new Pos(i, h);
-                if(board.get(p) != null) {
+                if(b.get(p) != null) {
                     bCopy.put(board.get(p), p);
                 }
             }
         }
-        return new Othello(time, size, player1, player2, bCopy, cT, forced, gS);
+
+        return bCopy;
     }
 
     private Othello(long t, int s, Player p1, Player p2, Board b, int cT, int forced, List gS) {

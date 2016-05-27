@@ -15,6 +15,7 @@ public class CheckStampa {
 
     public static void main(String[] args) {
         Othello o1 = new Othello("Marco", "Alice");
+        /*
         String[] mArr = movs.split("\n");
         String[] bArr = boards.split("\n");
         String[] vmArr = valMovs.split("\n");
@@ -38,7 +39,15 @@ public class CheckStampa {
         }
         if(o1.result() == 2) { System.out.println("Punteggio finale ok"); }
         else System.out.println("Punteggio non corrisponde: "+o1.result());
+        */
 
+        printer(o1.getBoard());
+        o1.move(stringToMove(null, "X3,5X3,4"));
+        System.out.println("----------------");
+        printer(o1.getBoard());
+        System.out.println("----------------");
+        o1.unMove();
+        printer(o1.getBoard());
     }
 
     public static String posPrinter(Pos p) {
@@ -78,7 +87,7 @@ public class CheckStampa {
         System.out.println();
     }
 
-    private static void printer(Board b) {
+    public static void printer(Board b) {
         for(int i = 0; i < 8; i++) {
             String stamp = "";
             for(int h = 0; h < 8; h++) {
