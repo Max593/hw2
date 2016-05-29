@@ -284,16 +284,38 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() {
-        List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco"));
-        Map<Pos, PieceModel<Species>> posMap = new HashMap<>();
-        for(int i = 0; i < size; i++) { for(int h = 0; h < size; h++) { posMap.put(new Pos(i,h), null); } }
+    public Mechanics<PieceModel<Species>> mechanics() { //Troppo lento, supera i 4000ms [MA FUNZIONANTE]
+        List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco")); //Tutti i pezzi di gioco
+
+        Map<Pos, PieceModel<Species>> posMap = new HashMap<>(); //Usato per la situazione starter
         posMap.put(new Pos((size/2)-1, size/2), new PieceModel<>(Species.DISC, "bianco")); //B 3,4
         posMap.put(new Pos(size/2, size/2), new PieceModel<>(Species.DISC, "nero")); //N 4,4
         posMap.put(new Pos((size/2)-1, (size/2)-1), new PieceModel<>(Species.DISC, "nero")); //N 3,3
-        posMap.put(new Pos((size/2), (size/2)-1), new PieceModel<>(Species.DISC, "bianco")); //B 4,3
-        
 
-        return new Mechanics<>(time, pcs, board.positions(), 2, new Situation<>(posMap, 1), );
+        Next<PieceModel<Species>>  prossimaM = s -> {
+            if(s == null) { throw new NullPointerException("La situazione di gioco non può essere null"); }
+
+            Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new HashMap<>(); //Mappa soluzione
+            GameRuler<PieceModel<Species>> o1 = copy();
+            for(Move<PieceModel<Species>> m : validMoves()) {
+                if(!m.getKind().equals(Move.Kind.RESIGN)) {
+                    o1.move(m);
+                    Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
+                    for(int i = 0; i < size; i++) {
+                        for(int h = 0; h < size; h++) {
+                            Pos p = new Pos(i,h);
+                            if(o1.getBoard().get(p) != null) { mapSit.put(p, o1.getBoard().get(p)); }
+                        }
+                    }
+                    Situation<PieceModel<Species>> sit = new Situation<>(mapSit, turn());
+
+                    nextMoves.put(m, sit); o1.unMove();
+                }
+            }
+
+            return nextMoves;
+        };
+
+        return new Mechanics<>(time, Collections.unmodifiableList(pcs), board.positions(), 2, new Situation<>(posMap, 1), prossimaM);
     }
 }
