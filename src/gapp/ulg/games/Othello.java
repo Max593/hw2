@@ -4,6 +4,7 @@ import gapp.ulg.game.board.*;
 import gapp.ulg.game.util.BoardOct;
 import gapp.ulg.game.util.Utils;
 import gapp.ulg.play.RandPlayer;
+import org.omg.PortableInterceptor.DISCARDING;
 
 import static gapp.ulg.game.board.PieceModel.Species;
 
@@ -283,5 +284,16 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() { return null; } //TEMPORANEO
+    public Mechanics<PieceModel<Species>> mechanics() {
+        List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco"));
+        Map<Pos, PieceModel<Species>> posMap = new HashMap<>();
+        for(int i = 0; i < size; i++) { for(int h = 0; h < size; h++) { posMap.put(new Pos(i,h), null); } }
+        posMap.put(new Pos((size/2)-1, size/2), new PieceModel<>(Species.DISC, "bianco")); //B 3,4
+        posMap.put(new Pos(size/2, size/2), new PieceModel<>(Species.DISC, "nero")); //N 4,4
+        posMap.put(new Pos((size/2)-1, (size/2)-1), new PieceModel<>(Species.DISC, "nero")); //N 3,3
+        posMap.put(new Pos((size/2), (size/2)-1), new PieceModel<>(Species.DISC, "bianco")); //B 4,3
+        
+
+        return new Mechanics<>(time, pcs, board.positions(), 2, new Situation<>(posMap, 1), );
+    }
 }

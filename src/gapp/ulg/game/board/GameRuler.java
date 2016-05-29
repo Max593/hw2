@@ -250,7 +250,7 @@ public interface GameRuler<P> {
         public final long time;
 
         /** La lista immodificabile dei modelli dei pezzi usati nel gioco, senza
-         * ripetizioni e in ordine arbitrario */
+         * ripetizioni e in ordine prima il nero e poi il bianco */
         public final List<P> pieces;
 
         /** La lista immodificabile di tutte le posizioni della board ordinate
