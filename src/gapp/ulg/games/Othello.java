@@ -53,7 +53,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     private Board<PieceModel<Species>> board;
     private int cT; //Turno corrente
     private int forced; //In caso di resa o mossa invalida forza la vittoria di un player senza considerare il punteggio
-    private List<GameRuler<PieceModel<Species>>> gS;
+    private List<GameRuler<PieceModel<Species>>> gS; //Stati di gioco salvati in ordine di esecuzione
 
     /** Crea un GameRuler per fare una partita a Othello, equivalente a
      * {@link Othello#Othello(long, int, String, String) Othello(0,8,p1,p2)}.
@@ -72,20 +72,20 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * @param p2  il nome del secondo giocatore
      * @throws NullPointerException se {@code p1} o {@code p2} è null
      * @throws IllegalArgumentException se size non è uno dei valori 6,8,10 o 12 */
-    public Othello(long time, int size, String p1, String p2) { //Le posizioni vanno da 0 a size-1
+    public Othello(long time, int size, String p1, String p2) {
         if(p1 == null || p2 == null) { throw new NullPointerException("Il nome di uno dei due giocatori non può essere null"); }
         if(!Arrays.asList(6, 8, 10, 12).contains(size)) { throw new IllegalArgumentException("La dimensione della board non rientra nei valori accettati"); }
         this.time = time;
         this.size = size;
-        this.player1 = new RandPlayer<>(p1); this.player2 = new RandPlayer<>(p2);
-        this.board = new BoardOct<>(size, size);
+        this.player1 = new RandPlayer<>(p1); this.player2 = new RandPlayer<>(p2); //Creo i players
+        this.board = new BoardOct<>(size, size); //Inizializzo la board sullo stato iniziare (BNNB)
         this.board.put(new PieceModel<>(Species.DISC, "bianco"), new Pos((size/2)-1, size/2)); //B 3,4
         this.board.put(new PieceModel<>(Species.DISC, "nero"), new Pos(size/2, size/2)); //N 4,4
         this.board.put(new PieceModel<>(Species.DISC, "nero"), new Pos((size/2)-1, (size/2)-1)); //N 3,3
         this.board.put(new PieceModel<>(Species.DISC, "bianco"), new Pos((size/2), (size/2)-1)); //B 4,3
         this.cT = 1; //Inizia sempre il player1 (colore nero)
         this.forced = -1;
-        this.gS = new ArrayList<>();
+        this.gS = new ArrayList<>(); //Primissimo status di gioco salvato nell'apposita lista
         gS.add(copy());
         this.player1.setGame(this); this.player2.setGame(this); //Assegno una copia del gioco ai players
     }
@@ -96,12 +96,12 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * </pre>
      * dove <code><i>Size</i></code> è la dimensione della board, ad es. "Othello8x8". */
     @Override
-    public String name() { return "Othello"+String.valueOf(size)+"x"+String.valueOf(size); }
+    public String name() { return "Othello"+String.valueOf(size)+"x"+String.valueOf(size); } //Nome del gioco con le dimensioni della board
 
     @Override
     public <T> T getParam(String name, Class<T> c) {
-        return null; //TEMPORANEO
-    }
+        return null;
+    } //Temporaneo, ancora da scrivere
 
     @Override
     public List<String> players() { return Collections.unmodifiableList(Arrays.asList(player1.name(), player2.name())); }
@@ -130,7 +130,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     public boolean move(Move<PieceModel<Species>> m) {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(cT == 0) { throw new IllegalStateException("La partita è già terminata"); }
-        if(isValid(m) && m.getKind() != Move.Kind.RESIGN) {
+        if(isValid(m) && m.getKind() != Move.Kind.RESIGN) { //Si esegue la mossa
             for(Action i : m.getActions()) {
                 if(i.getKind() == Action.Kind.ADD) { board.put((PieceModel) i.getPiece(), (Pos) i.getPos().get(0)); }
                 if(i.getKind() == Action.Kind.SWAP) { for(Object p : i.getPos()) { board.put((PieceModel) i.getPiece(), (Pos) p); } }
@@ -145,14 +145,15 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             }
             return true;
         }
-        if(m.getKind() == Move.Kind.RESIGN) {
+        if(m.getKind() == Move.Kind.RESIGN
+                && !validMoves().isEmpty()) { //Vince l'altro player se ci si arrende
             if(cT == 2) { forced = 1; }
             else if(cT == 1) { forced = 2; }
             cT = 0;
             gS.add(copy());
             return true;
         }
-        if(cT == 2) { forced = 1; }
+        if(cT == 2) { forced = 1; } //Vince l'altro player se si compie una mossa non valida
         else if(cT == 1) { forced = 2; }
         cT = 0; //Termina il game se la mossa non è valida.
         gS.add(copy());
@@ -160,28 +161,28 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public boolean unMove() { //Continua a tornare un errore sulla board unMove
+    public boolean unMove() {
         if(gS.size() == 1) { return false; } //Se abbiamo appena iniziato il gioco
 
-        Board past = gS.get(gS.size()-2).getBoard();
+        Board past = gS.get(gS.size()-2).getBoard(); //Prende la penultima board
         for(int i = 0; i < size; i++) {
             for(int h = 0; h < size; h++) {
                 Pos p = new Pos(i,h);
-                if(past.get(p) == null) { board.remove(p); }
+                if(past.get(p) == null) { board.remove(p); } //Elimina tutti gli ADD
                 if(board.get(p) != null) {
-                    if(past.get(p) != null) { board.put((PieceModel) past.get(p), p); }
+                    if(past.get(p) != null) { board.put((PieceModel) past.get(p), p); } //Rigira gli SWAP
                 }
             }
         }
 
-        cT = gS.get(gS.size()-2).turn();
-        gS.remove(gS.size()-1);
-        player1.setGame(copy()); player2.setGame(copy());
+        cT = gS.get(gS.size()-2).turn(); //Ritorna al turno di gioco passato (ritorna anche in gioco se necessario)
+        gS.remove(gS.size()-1); //Elimina lo status su cui è stato fatto unMove
+        player1.setGame(copy()); player2.setGame(copy()); //Reimposta i players allo stato attuale
         return true;
     }
 
     @Override
-    public boolean isPlaying(int i) {
+    public boolean isPlaying(int i) { //I giocatori non si eliminano, dunque NON sono in partita solo a gioco terminato
         if(!Arrays.asList(1, 2).contains(i)) { throw new IllegalArgumentException("Il giocatore selezionato non è presente in questa partita"); }
         return cT != 0;
     }
