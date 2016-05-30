@@ -9,6 +9,7 @@ import org.omg.PortableInterceptor.DISCARDING;
 import static gapp.ulg.game.board.PieceModel.Species;
 
 import java.util.*;
+import java.util.concurrent.RunnableFuture;
 
 
 /** <b>IMPLEMENTARE I METODI SECONDO LE SPECIFICHE DATE NEI JAVADOC. Non modificare
@@ -162,17 +163,14 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public boolean unMove() {
+    public boolean unMove() { //Vorrei scrivere board = copy board passata, non ci riesco
         if(gS.size() == 1) { return false; } //Se abbiamo appena iniziato il gioco
 
         Board past = gS.get(gS.size()-2).getBoard(); //Prende la penultima board
-        for(int i = 0; i < size; i++) {
-            for(int h = 0; h < size; h++) {
-                Pos p = new Pos(i,h);
-                if(past.get(p) == null) { board.remove(p); } //Elimina tutti gli ADD
-                if(board.get(p) != null) {
-                    if(past.get(p) != null) { board.put((PieceModel) past.get(p), p); } //Rigira gli SWAP
-                }
+        for(Pos p : board.positions()) { //Per ogni posizione della board
+            if(board.get(p) != null && past.get(p) == null) { board.remove(p); } //Elimina tutti gli ADD
+            else if(board.get(p) != null && !board.get(p).equals(past.get(p))) {
+                if(past.get(p) != null) { board.put((PieceModel) past.get(p), p); } //Rigira gli SWAP
             }
         }
 
@@ -252,11 +250,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public GameRuler<PieceModel<Species>> copy() {
-        Board bCopy = bCopy(board);
-
-        return new Othello(time, size, player1, player2, bCopy, cT, forced, gS);
-    }
+    public GameRuler<PieceModel<Species>> copy() { return new Othello(time, size, player1, player2, bCopy(board), cT, forced, gS); }
 
     private Board bCopy(Board b) {
         Board bCopy = new BoardOct(size, size);
@@ -291,8 +285,9 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         posMap.put(new Pos((size/2)-1, size/2), new PieceModel<>(Species.DISC, "bianco")); //B 3,4
         posMap.put(new Pos(size/2, size/2), new PieceModel<>(Species.DISC, "nero")); //N 4,4
         posMap.put(new Pos((size/2)-1, (size/2)-1), new PieceModel<>(Species.DISC, "nero")); //N 3,3
+        posMap.put(new Pos((size/2), (size/2)-1), new PieceModel<>(Species.DISC, "bianco")); //B 4,3
 
-        Next<PieceModel<Species>>  prossimaM = s -> {
+        Next<PieceModel<Species>> prossimaM = s -> {
             if(s == null) { throw new NullPointerException("La situazione di gioco non può essere null"); }
 
             Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new HashMap<>(); //Mappa soluzione
@@ -319,3 +314,42 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         return new Mechanics<>(time, Collections.unmodifiableList(pcs), board.positions(), 2, new Situation<>(posMap, 1), prossimaM);
     }
 }
+
+/*
+@Override
+    public Mechanics<PieceModel<Species>> mechanics() { //Troppo lento, supera i 4000ms [MA FUNZIONANTE]
+        List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco")); //Tutti i pezzi di gioco
+
+        Map<Pos, PieceModel<Species>> posMap = new HashMap<>(); //Usato per la situazione starter
+        posMap.put(new Pos((size/2)-1, size/2), new PieceModel<>(Species.DISC, "bianco")); //B 3,4
+        posMap.put(new Pos(size/2, size/2), new PieceModel<>(Species.DISC, "nero")); //N 4,4
+        posMap.put(new Pos((size/2)-1, (size/2)-1), new PieceModel<>(Species.DISC, "nero")); //N 3,3
+        posMap.put(new Pos((size/2), (size/2)-1), new PieceModel<>(Species.DISC, "bianco")); //B 4,3
+
+        Next<PieceModel<Species>> prossimaM = s -> {
+            if(s == null) { throw new NullPointerException("La situazione di gioco non può essere null"); }
+
+            Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new HashMap<>(); //Mappa soluzione
+            GameRuler<PieceModel<Species>> o1 = copy();
+            for(Move<PieceModel<Species>> m : validMoves()) {
+                if(!m.getKind().equals(Move.Kind.RESIGN)) {
+                    o1.move(m);
+                    Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
+                    for(int i = 0; i < size; i++) {
+                        for(int h = 0; h < size; h++) {
+                            Pos p = new Pos(i,h);
+                            if(o1.getBoard().get(p) != null) { mapSit.put(p, o1.getBoard().get(p)); }
+                        }
+                    }
+                    Situation<PieceModel<Species>> sit = new Situation<>(mapSit, turn());
+
+                    nextMoves.put(m, sit); o1.unMove();
+                }
+            }
+
+            return nextMoves;
+        };
+
+        return new Mechanics<>(time, Collections.unmodifiableList(pcs), board.positions(), 2, new Situation<>(posMap, 1), prossimaM);
+    }
+ */
