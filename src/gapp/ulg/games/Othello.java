@@ -4,12 +4,11 @@ import gapp.ulg.game.board.*;
 import gapp.ulg.game.util.BoardOct;
 import gapp.ulg.game.util.Utils;
 import gapp.ulg.play.RandPlayer;
-import org.omg.PortableInterceptor.DISCARDING;
 
 import static gapp.ulg.game.board.PieceModel.Species;
 
 import java.util.*;
-import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.*;
 
 
 /** <b>IMPLEMENTARE I METODI SECONDO LE SPECIFICHE DATE NEI JAVADOC. Non modificare
@@ -278,7 +277,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() { //Troppo lento, supera i 4000ms [MA FUNZIONANTE]
+    public Mechanics<PieceModel<Species>> mechanics() {
         List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco")); //Tutti i pezzi di gioco
 
         Map<Pos, PieceModel<Species>> posMap = new HashMap<>(); //Usato per la situazione starter
@@ -290,18 +289,29 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         Next<PieceModel<Species>> prossimaM = s -> {
             if(s == null) { throw new NullPointerException("La situazione di gioco non può essere null"); }
 
-            Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new HashMap<>(); //Mappa soluzione
-            GameRuler<PieceModel<Species>> o1 = copy();
-            for(Move<PieceModel<Species>> m : validMoves()) {
-                if(!m.getKind().equals(Move.Kind.RESIGN)) {
-                    o1.move(m);
-                    Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
-                    for(Pos p : o1.getBoard().positions()) { if(o1.getBoard().get(p) != null) { mapSit.put(p, o1.getBoard().get(p)); } }
-                    Situation<PieceModel<Species>> sit = new Situation<>(mapSit, turn());
+            ConcurrentMap<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new ConcurrentHashMap<>(); //Mappa soluzione
+            class Operation implements Runnable {
+                private Move<PieceModel<Species>> m;
+                public Operation(Move<PieceModel<Species>> m) { this.m = m; }
 
-                    nextMoves.put(m, sit); o1.unMove();
+                @Override
+                public void run() {
+                    GameRuler<PieceModel<Species>> o1 = copy();
+                    o1.move(m); Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
+                    for(Pos p : o1.getBoard().positions()) { if(o1.getBoard().get(p) != null) { mapSit.put(p, o1.getBoard().get(p)); } }
+                    Situation<PieceModel<Species>> sit = new Situation<>(mapSit, o1.turn());
+                    nextMoves.put(m, sit);
                 }
             }
+
+            List<Thread> tList = new ArrayList<>();
+            for(Move<PieceModel<Species>> m : validMoves()) {
+                if(!m.equals(Move.Kind.RESIGN)) {
+                    nextMoves.put(m, new Situation<>(null, 0));
+                    tList.add(new Thread(new Operation(m)));
+                }
+            }
+            for(Thread t : tList) { t.start(); }
 
             return nextMoves;
         };

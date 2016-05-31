@@ -3,10 +3,10 @@ package gapp.ulg.test;
 import gapp.ulg.game.board.*;
 import gapp.ulg.games.Othello;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Created by maxmo on 22/05/2016.
@@ -14,7 +14,6 @@ import java.util.Set;
 public class CheckStampa {
 
     public static void main(String[] args) {
-        Othello o1 = new Othello("Marco", "Alice");
         /*
         String[] mArr = movs.split("\n");
         String[] bArr = boards.split("\n");
@@ -40,7 +39,7 @@ public class CheckStampa {
         if(o1.result() == 2) { System.out.println("Punteggio finale ok"); }
         else System.out.println("Punteggio non corrisponde: "+o1.result());
         */
-
+/*
         printer(o1.getBoard());
         o1.move(stringToMove(null, "X3,5X3,4"));
         System.out.println("----------------");
@@ -48,6 +47,35 @@ public class CheckStampa {
         System.out.println("----------------");
         o1.unMove();
         printer(o1.getBoard());
+*/
+        Othello o1 = new Othello("Marco", "Alice");
+        ConcurrentMap<Move<PieceModel<PieceModel.Species>>, GameRuler.Situation<PieceModel<PieceModel.Species>>> nextMoves = new ConcurrentHashMap<>(); //Mappa soluzione
+
+        class Operation implements Runnable {
+            private Move<PieceModel<PieceModel.Species>> m;
+            public Operation(Move<PieceModel<PieceModel.Species>> m) { this.m = m; }
+
+            @Override
+            public void run() {
+                GameRuler<PieceModel<PieceModel.Species>> o2 = o1.copy();
+                o2.move(m); Map<Pos, PieceModel<PieceModel.Species>> mapSit = new HashMap<>();
+                for(Pos p : o2.getBoard().positions()) { if(o2.getBoard().get(p) != null) { mapSit.put(p, o2.getBoard().get(p)); } }
+                GameRuler.Situation<PieceModel<PieceModel.Species>> sit = new GameRuler.Situation<>(mapSit, o2.turn());
+                nextMoves.put(m, sit);
+            }
+        }
+
+        List<Thread> tList = new ArrayList<>();
+        for(Move<PieceModel<PieceModel.Species>> m : o1.validMoves()) {
+            if(!m.equals(Move.Kind.RESIGN)) {
+                nextMoves.put(m, new GameRuler.Situation<>(null, 0));
+                tList.add(new Thread(new Operation(m)));
+            }
+        }
+        for(Thread t : tList) { t.start(); }
+
+        System.out.println(nextMoves);
+
     }
 
     public static String posPrinter(Pos p) {
