@@ -296,12 +296,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                 if(!m.getKind().equals(Move.Kind.RESIGN)) {
                     o1.move(m);
                     Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
-                    for(int i = 0; i < size; i++) {
-                        for(int h = 0; h < size; h++) {
-                            Pos p = new Pos(i,h);
-                            if(o1.getBoard().get(p) != null) { mapSit.put(p, o1.getBoard().get(p)); }
-                        }
-                    }
+                    for(Pos p : o1.getBoard().positions()) { if(o1.getBoard().get(p) != null) { mapSit.put(p, o1.getBoard().get(p)); } }
                     Situation<PieceModel<Species>> sit = new Situation<>(mapSit, turn());
 
                     nextMoves.put(m, sit); o1.unMove();
