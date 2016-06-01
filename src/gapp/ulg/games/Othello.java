@@ -138,12 +138,12 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             }
             if(cT == 2) { cT = 1; } //Passa il turno all'altro player
             else if(cT == 1) { cT = 2; }
-            gS.add(copy());
             if(validMoves().isEmpty()) { //Non dovrebbe stare dentro il turn?? (funziona però)
                 if(cT == 2) { cT = 1; } //Passa il turno all'altro player
                 else if(cT == 1) { cT = 2; }
                 if(validMoves().isEmpty()) { cT = 0; }
             }
+            gS.add(copy());
             return true;
         }
         if(m.getKind() == Move.Kind.RESIGN

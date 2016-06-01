@@ -1,6 +1,9 @@
 package gapp.ulg.games;
 
 import gapp.ulg.game.board.*;
+import gapp.ulg.game.util.BoardOct;
+import gapp.ulg.game.util.Utils;
+import gapp.ulg.play.RandPlayer;
 
 import java.util.*;
 
@@ -23,6 +26,19 @@ import static gapp.ulg.game.board.PieceModel.Species;
  * Per ulteriori informazioni si può consultare
  * <a href="https://en.wikipedia.org/wiki/M,n,k-game">(m,n,k)-game</a> */
 public class MNKgame implements GameRuler<PieceModel<Species>> {
+
+    private long time;
+    private int m;
+    private int n;
+    private int k;
+    private Board<PieceModel<Species>> board;
+    private int cT;
+    private int forced;
+    private List<GameRuler<PieceModel<Species>>> gS;
+    private Player<PieceModel<Species>> player1;
+    private Player<PieceModel<Species>> player2;
+
+
     /** Crea un {@code MNKgame} con le impostazioni date.
      * @param time  tempo in millisecondi per fare una mossa, se <= 0 significa nessun
      *              limite
@@ -35,7 +51,18 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
      * @throws IllegalArgumentException se i valori di {@code m,n,k} non soddisfano
      * le condizioni 1 <= {@code k} <= max{{@code M,N}} <= 20 e 1 <= min{{@code M,N}} */
     public MNKgame(long time, int m, int n, int k, String p1, String p2) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(p1 == null || p2 == null) { throw new NullPointerException("Player1 o Player2 non può essere null"); }
+        if(m*n > 20 || m*n < 1 || k < 1 || k > 20) { throw new IllegalArgumentException("Uno dei valori di gioco non è accettabile"); }
+        this.time = time;
+        this.m = m;
+        this.n = n;
+        this.k = k;
+        this.board = new BoardOct<>(m,n);
+        this.cT = 1;
+        this.forced = -1;
+        this.gS = new ArrayList<>();
+        this.player1 = new RandPlayer<>(p1); this.player2 = new RandPlayer<>(p2);
+        player1.setGame(this); player2.setGame(this);
     }
 
     /** Il nome rispetta il formato:
@@ -45,27 +72,30 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
      * dove <code><i>M,N,K</i></code> sono i valori dei parametri M,N,K, ad es.
      * "4,5,4-game". */
     @Override
-    public String name() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public String name() { return String.valueOf(m)+","+String.valueOf(n)+","+String.valueOf(k)+"-game"; }
 
     @Override
     public <T> T getParam(String name, Class<T> c) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
-    }
+        return null;
+    } //Temporaneo
 
     @Override
-    public List<String> players() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public List<String> players() { return Collections.unmodifiableList(Arrays.asList(player1.name(), player2.name())); }
 
     /** @return il colore "nero" per il primo giocatore e "bianco" per il secondo */
     @Override
     public String color(String name) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(name == null) { throw new NullPointerException("name non può essere null"); }
+        if(!players().contains(name)) { throw new IllegalArgumentException("Inserire il nome di un player presente in partita"); }
+        if(player1.name().equals(name)) { return "nero"; }
+        return "bianco"; //Unica altra possibilità
     }
 
     @Override
-    public Board<PieceModel<Species>> getBoard() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public Board<PieceModel<Species>> getBoard() { return Utils.UnmodifiableBoard(board); }
 
     @Override
-    public int turn() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public int turn() { return cT; }
 
     /** Se la mossa non è valida termina il gioco dando la vittoria all'altro
      * giocatore.
@@ -77,7 +107,26 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
      * disposte le pedine rimanenti di entrambi i giocatori). */
     @Override
     public boolean move(Move<PieceModel<Species>> m) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
+        if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
+
+        if(isValid(m)) {
+            board.put(m.getActions().get(0).getPiece(), m.getActions().get(0).getPos().get(0));
+            /*Inserire un sistema che controlla la possibilità di vittoria (scorre le pedine in tutte le direzioni
+            e verifica che sia possibile arrivare a k consecutive) */
+
+
+            if(cT == 2) { cT = 1; } //Passa il turno all'altro player
+            else if(cT == 1) { cT = 2; }
+            gS.add(copy());
+            return true;
+        }
+
+        if(cT == 2) { forced = 1; } //Vince l'altro player se si compie una mossa non valida
+        else if(cT == 1) { forced = 2; }
+        cT = 0; //Termina il game se la mossa non è valida.
+        gS.add(copy());
+        return false;
     }
 
     @Override
@@ -87,7 +136,8 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
 
     @Override
     public boolean isPlaying(int i) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(!Arrays.asList(1, 2).contains(i)) { throw new IllegalArgumentException("Il giocatore selezionato non è presente in questa partita"); }
+        return cT != 0;
     }
 
     @Override
@@ -97,7 +147,19 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
      * di tipo {@link Action.Kind#ADD}. */
     @Override
     public Set<Move<PieceModel<Species>>> validMoves() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
+        Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
+        PieceModel<Species> pP = new PieceModel<>(Species.DISC, "nero");
+        if(cT == 2) { pP = new PieceModel<>(Species.DISC, "bianco"); } //Se sta giocando il player 2;
+
+        for(Pos p : board.positions()) { //Per ogni posizione della board
+            if(board.get(p) == null) { //Per ogni posizione vuota
+                Action<PieceModel<Species>> add = new Action<>(p, pP);
+                moveSet.add(new Move<>(Arrays.asList(add)));
+            }
+        }
+
+        return Collections.unmodifiableSet(moveSet);
     }
 
     @Override
