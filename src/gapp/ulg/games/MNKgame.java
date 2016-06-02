@@ -52,7 +52,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
      * le condizioni 1 <= {@code k} <= max{{@code M,N}} <= 20 e 1 <= min{{@code M,N}} */
     public MNKgame(long time, int m, int n, int k, String p1, String p2) {
         if(p1 == null || p2 == null) { throw new NullPointerException("Player1 o Player2 non può essere null"); }
-        if(m*n > 20 || m*n < 1 || k < 1 || k > 20) { throw new IllegalArgumentException("Uno dei valori di gioco non è accettabile"); }
+        if(m > 20 || n > 20 || m < 1 || n < 1 || k < 1 || k > 20) { throw new IllegalArgumentException("Uno dei valori di gioco non è accettabile"); }
         this.time = time;
         this.m = m;
         this.n = n;
@@ -110,14 +110,24 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
 
-        if(isValid(m)) {
-            board.put(m.getActions().get(0).getPiece(), m.getActions().get(0).getPos().get(0));
-            /*Inserire un sistema che controlla la possibilità di vittoria (scorre le pedine in tutte le direzioni
-            e verifica che sia possibile arrivare a k consecutive) */
+        List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
+                Board.Dir.DOWN_L, Board.Dir.DOWN, Board.Dir.DOWN_R, Board.Dir.RIGHT, Board.Dir.UP_R);
+        if(isValid(m) && m.getKind() != Move.Kind.RESIGN) {
+            board.put(m.getActions().get(0).getPiece(), m.getActions().get(0).getPos().get(0)); //Esecuzione della mossa
+            //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE / MOSSE RIMANENTI == NUMERO DI CASELLE / 2]
 
 
+            //
             if(cT == 2) { cT = 1; } //Passa il turno all'altro player
             else if(cT == 1) { cT = 2; }
+            gS.add(copy());
+            return true;
+        }
+
+        if(m.getKind() == Move.Kind.RESIGN) { //Vince l'altro player se ci si arrende
+            if(cT == 2) { forced = 1; }
+            else if(cT == 1) { forced = 2; }
+            cT = 0;
             gS.add(copy());
             return true;
         }
@@ -141,7 +151,10 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public int result() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public int result() {
+        if(cT != 0) { return -1; }
+        return forced; //Se il gioco è terminato, settare a mano il vincitore con forced
+    }
 
     /** Ogni mossa (diversa dall'abbandono) è rappresentata da una sola {@link Action}
      * di tipo {@link Action.Kind#ADD}. */
@@ -159,6 +172,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
             }
         }
 
+        if(moveSet.size() > 0) { moveSet.add(new Move(Move.Kind.RESIGN)); }
         return Collections.unmodifiableSet(moveSet);
     }
 

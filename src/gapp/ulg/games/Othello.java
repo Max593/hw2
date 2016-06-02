@@ -198,7 +198,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
      * {@link Action.Kind#ADD} seguita da una {@link Action} di tipo
      * {@link Action.Kind#SWAP}. */
     @Override
-    public Set<Move<PieceModel<Species>>> validMoves() {
+    public Set<Move<PieceModel<Species>>> validMoves() { //Prima o poi dovrò trovare la forza di riscriverlo in multithreading...
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
         Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
@@ -233,6 +233,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                 }
             }
         }
+
         if(moveSet.size() > 0) { moveSet.add(new Move(Move.Kind.RESIGN)); }
         return Collections.unmodifiableSet(moveSet);
     }
@@ -293,37 +294,33 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
             if(s.turn == 0) { return nextMoves; }
 
-            class Mapper implements Runnable {
-                private Move<PieceModel<Species>> mov;
-                private GameRuler<PieceModel<Species>> othello;
-                private Mapper(Move<PieceModel<Species>> m, GameRuler<PieceModel<Species>> o1) {
-                    this.mov = m;
-                    this.othello = o1;
-                }
-
-                @Override
-                public void run() {
-                    othello.move(mov); Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
-                    for(Pos p : othello.getBoard().positions()) {
-                        if(othello.getBoard().get(p) != null) {
-                            mapSit.put(p, othello.getBoard().get(p));
-                        }
-                    }
-                    nextMoves.put(mov, new Situation<>(mapSit, othello.turn()));
-                }
-            }
-
+            ExecutorService service = Executors.newCachedThreadPool();
             for(Move<PieceModel<Species>> m : validMoves()) {
                 if(!m.getKind().equals(Move.Kind.RESIGN)) {
                     nextMoves.put(m, new Situation<>(null, 1));
-                    new Thread(new Mapper(m, copy())).start();
+                    service.execute(new Runnable() {
+                        private Move<PieceModel<Species>> mov = m;
+                        private GameRuler<PieceModel<Species>> othello = copy();
+
+                        @Override
+                        public void run() {
+                            othello.move(mov); Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
+                            for(Pos p : othello.getBoard().positions()) {
+                                if(othello.getBoard().get(p) != null) {
+                                    mapSit.put(p, othello.getBoard().get(p));
+                                }
+                            }
+                            nextMoves.put(mov, new Situation<>(mapSit, othello.turn()));
+                        }
+                    });
                 }
             }
 
+            service.shutdown();
             return nextMoves;
         };
 //
         return new Mechanics<>(time, Collections.unmodifiableList(pcs), board.positions(), 2, new Situation<>(posMap, 1), prossimaM); */
-        return null; //Temporaneo
+        return null;
     }
 }

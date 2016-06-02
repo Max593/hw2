@@ -115,4 +115,16 @@ public class Utils {
                                               int np, Player<P>...pp) {
         throw new UnsupportedOperationException("OPZIONALE");
     }
+
+    public static Board.Dir opposite(Board.Dir d) {
+        if(d == Board.Dir.UP) { return Board.Dir.DOWN; }
+        if(d == Board.Dir.UP_L) { return Board.Dir.DOWN_R; }
+        if(d == Board.Dir.LEFT) { return Board.Dir.RIGHT; }
+        if(d == Board.Dir.DOWN_L) { return Board.Dir.UP_R; }
+        if(d == Board.Dir.DOWN) { return Board.Dir.UP; }
+        if(d == Board.Dir.DOWN_R) { return Board.Dir.UP_L; }
+        if(d == Board.Dir.RIGHT) { return Board.Dir.LEFT; }
+        return Board.Dir.DOWN_L;
+    }
 }
+
