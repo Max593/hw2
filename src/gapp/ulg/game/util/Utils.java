@@ -116,7 +116,7 @@ public class Utils {
         throw new UnsupportedOperationException("OPZIONALE");
     }
 
-    public static Board.Dir opposite(Board.Dir d) {
+    public static Board.Dir opposite(Board.Dir d) { //Ritorna la direzione opposta di quella in input
         if(d == Board.Dir.UP) { return Board.Dir.DOWN; }
         if(d == Board.Dir.UP_L) { return Board.Dir.DOWN_R; }
         if(d == Board.Dir.LEFT) { return Board.Dir.RIGHT; }

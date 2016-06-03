@@ -110,11 +110,13 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
 
+
+
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
                 Board.Dir.DOWN_L, Board.Dir.DOWN, Board.Dir.DOWN_R, Board.Dir.RIGHT, Board.Dir.UP_R);
         if(isValid(m) && m.getKind() != Move.Kind.RESIGN) {
             board.put(m.getActions().get(0).getPiece(), m.getActions().get(0).getPos().get(0)); //Esecuzione della mossa
-            //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE / MOSSE RIMANENTI == NUMERO DI CASELLE / 2]
+            //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE VUOTE IN LINEA / MOSSE RIMANENTI ==? NUMERO DI CASELLE / 2 = se il player può ancora vincere]
             for(Pos p : board.positions()) { //Per tutte le posizioni della board
 
             }
@@ -133,7 +135,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
             return true;
         }
 
-        if(cT == 2) { forced = 1; } //Vince l'altro player se si compie una mossa non valida
+        if(cT == 2) { forced = 1; } //Vince l'altro player se si compie una mossa NON valida
         else if(cT == 1) { forced = 2; }
         cT = 0; //Termina il game se la mossa non è valida.
         gS.add(copy());
