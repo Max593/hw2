@@ -278,7 +278,8 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() { /*
+    public Mechanics<PieceModel<Species>> mechanics() {
+
         List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco")); //Tutti i pezzi di gioco
 
         Map<Pos, PieceModel<Species>> posMap = new HashMap<>(); //Usato per la situazione starter
@@ -292,35 +293,51 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
             ConcurrentMap<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new ConcurrentHashMap<>(); //Mappa soluzione
 
-            if(s.turn == 0) { return nextMoves; }
+            class Operation implements Callable{
+                private Move<PieceModel<Species>> mov;
+                private GameRuler<PieceModel<Species>> othello;
 
-            ExecutorService service = Executors.newCachedThreadPool();
-            for(Move<PieceModel<Species>> m : validMoves()) {
-                if(!m.getKind().equals(Move.Kind.RESIGN)) {
-                    nextMoves.put(m, new Situation<>(null, 1));
-                    service.execute(new Runnable() {
-                        private Move<PieceModel<Species>> mov = m;
-                        private GameRuler<PieceModel<Species>> othello = copy();
+                public Operation(Move m, GameRuler g) {
+                    this.mov = m;
+                    this.othello = g;
+                }
 
-                        @Override
-                        public void run() {
-                            othello.move(mov); Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
-                            for(Pos p : othello.getBoard().positions()) {
-                                if(othello.getBoard().get(p) != null) {
-                                    mapSit.put(p, othello.getBoard().get(p));
-                                }
-                            }
-                            nextMoves.put(mov, new Situation<>(mapSit, othello.turn()));
+                @Override
+                public Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> call() throws Exception {
+                    Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> res = new HashMap<>(); //Risultato
+                    othello.move(mov); Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
+                    for(Pos p : othello.getBoard().positions()) {
+                        if(othello.getBoard().get(p) != null) {
+                            mapSit.put(p, othello.getBoard().get(p));
                         }
-                    });
+                    }
+                    res.put(mov, new Situation<>(mapSit, othello.turn()));
+                    return res;
+                }
+            }
+            ExecutorService executor = Executors.newCachedThreadPool();
+
+            Set<Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>>> listFut = new HashSet<>();
+            for(Move<PieceModel<Species>> m : validMoves()) {
+                Callable<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> callable = new Operation(m, copy());
+                Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> future = executor.submit(callable);
+                listFut.add(future);
+            }
+
+            for(Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> future : listFut) {
+                try {
+                    nextMoves.putAll(future.get());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
                 }
             }
 
-            service.shutdown();
+            executor.shutdown();
             return nextMoves;
         };
 //
-        return new Mechanics<>(time, Collections.unmodifiableList(pcs), board.positions(), 2, new Situation<>(posMap, 1), prossimaM); */
-        return null;
+        return new Mechanics<>(time, Collections.unmodifiableList(pcs), board.positions(), 2, new Situation<>(posMap, 1), prossimaM);
     }
 }

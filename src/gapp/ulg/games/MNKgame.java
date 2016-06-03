@@ -115,10 +115,11 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         if(isValid(m) && m.getKind() != Move.Kind.RESIGN) {
             board.put(m.getActions().get(0).getPiece(), m.getActions().get(0).getPos().get(0)); //Esecuzione della mossa
             //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE / MOSSE RIMANENTI == NUMERO DI CASELLE / 2]
+            for(Pos p : board.positions()) { //Per tutte le posizioni della board
 
+            }
 
-            //
-            if(cT == 2) { cT = 1; } //Passa il turno all'altro player
+            if(cT == 2) { cT = 1; } //Passa il turno all'altro player se il gioco non è finito o se non è destinato a finire in patta
             else if(cT == 1) { cT = 2; }
             gS.add(copy());
             return true;
