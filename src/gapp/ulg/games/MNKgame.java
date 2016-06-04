@@ -6,6 +6,7 @@ import gapp.ulg.game.util.Utils;
 import gapp.ulg.play.RandPlayer;
 
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import static gapp.ulg.game.board.PieceModel.Species;
 
@@ -110,15 +111,25 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
 
+        class Victory implements Callable {
 
+
+            @Override
+            public Object call() throws Exception {
+                return null;
+            }
+        }
 
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
                 Board.Dir.DOWN_L, Board.Dir.DOWN, Board.Dir.DOWN_R, Board.Dir.RIGHT, Board.Dir.UP_R);
+
         if(isValid(m) && m.getKind() != Move.Kind.RESIGN) {
             board.put(m.getActions().get(0).getPiece(), m.getActions().get(0).getPos().get(0)); //Esecuzione della mossa
 
             //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE VUOTE IN LINEA / MOSSE RIMANENTI ==? NUMERO DI CASELLE / 2 = se il player può ancora vincere]
             for(Pos p : board.positions()) { //Per tutte le posizioni della board
+
+
 
             }
 
