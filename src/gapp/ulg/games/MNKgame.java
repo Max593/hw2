@@ -6,9 +6,9 @@ import gapp.ulg.game.util.Utils;
 import gapp.ulg.play.RandPlayer;
 
 import java.util.*;
-import java.util.concurrent.Callable;
 
 import static gapp.ulg.game.board.PieceModel.Species;
+import static gapp.ulg.game.util.Utils.opposite;
 
 /** <b>IMPLEMENTARE I METODI SECONDO LE SPECIFICHE DATE NEI JAVADOC. Non modificare
  * le intestazioni dei metodi.</b>
@@ -111,25 +111,48 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
 
-        class Victory implements Callable {
-
-
-            @Override
-            public Object call() throws Exception {
-                return null;
-            }
-        }
-
-        List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
+        List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT, //Tutte le direzioni della board
                 Board.Dir.DOWN_L, Board.Dir.DOWN, Board.Dir.DOWN_R, Board.Dir.RIGHT, Board.Dir.UP_R);
+        List<Board.Dir> halfDirections = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT, Board.Dir.DOWN_L); //Metà delle direzioni per applicazioni con opposite
 
-        if(isValid(m) && m.getKind() != Move.Kind.RESIGN) {
+        if(isValid(m) && m.getKind() != Move.Kind.RESIGN) { //Se si esegue una mossa valida che non è la Resa
             board.put(m.getActions().get(0).getPiece(), m.getActions().get(0).getPos().get(0)); //Esecuzione della mossa
 
-            //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE VUOTE IN LINEA / MOSSE RIMANENTI ==? NUMERO DI CASELLE / 2 = se il player può ancora vincere]
-            for(Pos p : board.positions()) { //Per tutte le posizioni della board
+            for(Board.Dir d : halfDirections) { //Controllo di vittoria sulla pedina appena inserita
+                Pos pBase = m.getActions().get(0).getPos().get(0); //Posizione da cui si itera (pedina appena inserita)
+                int counter = 1; //Numero di pedine consecutive (1 contando la pedina appena inserita)
 
+                try { //Test nella direzione
+                    Pos adj = board.adjacent(pBase, d);
+                    while(true) {
+                        if(adj == null) { break; } //Se si esce dalla board
+                        else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; adj = board.adjacent(adj, d); } //Se è una pedina alleata
+                        else if(board.get(adj) == null) { break; } //Se è una pedina vuota
+                        else if(!board.get(adj).equals(m.getActions().get(0).getPiece())) { break; } //Se è una pedina avversaria
+                    }
+                } catch(NullPointerException e) { continue; }
 
+                if(counter < k) { //Se il contatore non ha raggiunto k
+                    try { //Test nella direzione opposta
+                        Pos adj = board.adjacent(pBase, opposite(d));
+                        while(true) {
+                            if (adj == null) { break; }
+                            else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; board.adjacent(adj, opposite(d)); }
+                            else if(board.get(adj) == null) { break; }
+                            else if(!board.get(adj).equals(m.getActions().get(0).getPiece())) { break; }
+                        }
+                    } catch(NullPointerException e) { continue; }
+                }
+
+                if(counter == k) { //Se è una mossa vincente, il gioco termina e vince il player corrente
+                    forced = cT;
+                    cT = 0;
+                    return true;
+                }
+            }
+
+            //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE VUOTE IN LINEA / MOSSE RIMANENTI (caselle vuote/2) = se il player può ancora vincere]
+            for(Pos p : board.positions()) { //Per tutte le posizioni della board (non mi servono tutte le posizioni a dire il vero, riformulare)
 
             }
 
