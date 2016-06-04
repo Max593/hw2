@@ -116,6 +116,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                 Board.Dir.DOWN_L, Board.Dir.DOWN, Board.Dir.DOWN_R, Board.Dir.RIGHT, Board.Dir.UP_R);
         if(isValid(m) && m.getKind() != Move.Kind.RESIGN) {
             board.put(m.getActions().get(0).getPiece(), m.getActions().get(0).getPos().get(0)); //Esecuzione della mossa
+
             //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE VUOTE IN LINEA / MOSSE RIMANENTI ==? NUMERO DI CASELLE / 2 = se il player può ancora vincere]
             for(Pos p : board.positions()) { //Per tutte le posizioni della board
 

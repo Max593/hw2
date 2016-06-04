@@ -14,7 +14,8 @@ import java.util.concurrent.ConcurrentMap;
 public class CheckStampa {
 
     public static void main(String[] args) {
-        /*
+        GameRuler<PieceModel<PieceModel.Species>> o1 = new Othello("Marco", "Alice");
+
         String[] mArr = movs.split("\n");
         String[] bArr = boards.split("\n");
         String[] vmArr = valMovs.split("\n");
@@ -38,7 +39,6 @@ public class CheckStampa {
         }
         if(o1.result() == 2) { System.out.println("Punteggio finale ok"); }
         else System.out.println("Punteggio non corrisponde: "+o1.result());
-        */
 /*
         printer(o1.getBoard());
         o1.move(stringToMove(null, "X3,5X3,4"));
