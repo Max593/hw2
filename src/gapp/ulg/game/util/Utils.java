@@ -126,5 +126,19 @@ public class Utils {
         if(d == Board.Dir.RIGHT) { return Board.Dir.LEFT; }
         return Board.Dir.DOWN_L;
     }
+
+    public static Board bCopy(Board b, int w, int h) {
+        Board bCopy = new BoardOct(w, h);
+        for(int i = 0; i < w; i++) {
+            for(int j = 0; j < h; j++) {
+                Pos p = new Pos(i, j);
+                if(b.get(p) != null) {
+                    bCopy.put(b.get(p), p);
+                }
+            }
+        }
+
+        return bCopy;
+    }
 }
 

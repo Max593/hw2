@@ -323,21 +323,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public GameRuler<PieceModel<Species>> copy() { return new Othello(time, size, player1, player2, bCopy(board), cT, forced, gS); }
-
-    private Board bCopy(Board b) {
-        Board bCopy = new BoardOct(size, size);
-        for(int i = 0; i < size; i++) {
-            for(int h = 0; h < size; h++) {
-                Pos p = new Pos(i, h);
-                if(b.get(p) != null) {
-                    bCopy.put(board.get(p), p);
-                }
-            }
-        }
-
-        return bCopy;
-    }
+    public GameRuler<PieceModel<Species>> copy() { return new Othello(time, size, player1, player2, Utils.bCopy(board, size, size), cT, forced, gS); }
 
     private Othello(long t, int s, Player p1, Player p2, Board b, int cT, int forced, List gS) {
         this.time = t;

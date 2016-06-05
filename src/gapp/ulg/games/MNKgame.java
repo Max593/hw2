@@ -29,8 +29,8 @@ import static gapp.ulg.game.util.Utils.opposite;
 public class MNKgame implements GameRuler<PieceModel<Species>> {
 
     private long time;
-    private int m;
-    private int n;
+    private int w;
+    private int h;
     private int k;
     private Board<PieceModel<Species>> board;
     private int cT;
@@ -55,8 +55,8 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         if(p1 == null || p2 == null) { throw new NullPointerException("Player1 o Player2 non può essere null"); }
         if(m > 20 || n > 20 || m < 1 || n < 1 || k < 1 || k > 20) { throw new IllegalArgumentException("Uno dei valori di gioco non è accettabile"); }
         this.time = time;
-        this.m = m;
-        this.n = n;
+        this.w = m;
+        this.h = n;
         this.k = k;
         this.board = new BoardOct<>(m,n);
         this.cT = 1;
@@ -73,7 +73,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
      * dove <code><i>M,N,K</i></code> sono i valori dei parametri M,N,K, ad es.
      * "4,5,4-game". */
     @Override
-    public String name() { return String.valueOf(m)+","+String.valueOf(n)+","+String.valueOf(k)+"-game"; }
+    public String name() { return String.valueOf(w)+","+String.valueOf(h)+","+String.valueOf(k)+"-game"; }
 
     @Override
     public <T> T getParam(String name, Class<T> c) {
@@ -126,8 +126,8 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                     Pos adj = board.adjacent(pBase, d);
                     while(true) {
                         if(adj == null) { break; } //Se si esce dalla board
-                        else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; adj = board.adjacent(adj, d); } //Se è una pedina alleata
                         else if(board.get(adj) == null) { break; } //Se è una pedina vuota
+                        else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; adj = board.adjacent(adj, d); } //Se è una pedina alleata
                         else if(!board.get(adj).equals(m.getActions().get(0).getPiece())) { break; } //Se è una pedina avversaria
                     }
                 } catch(NullPointerException e) { continue; }
@@ -137,8 +137,8 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                         Pos adj = board.adjacent(pBase, opposite(d));
                         while(true) {
                             if (adj == null) { break; }
-                            else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; board.adjacent(adj, opposite(d)); }
                             else if(board.get(adj) == null) { break; }
+                            else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; board.adjacent(adj, opposite(d)); }
                             else if(!board.get(adj).equals(m.getActions().get(0).getPiece())) { break; }
                         }
                     } catch(NullPointerException e) { continue; }
@@ -147,16 +147,17 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                 if(counter == k) { //Se è una mossa vincente, il gioco termina e vince il player corrente
                     forced = cT;
                     cT = 0;
+                    gS.add(copy());
                     return true;
                 }
             }
 
-            //Sistema che determina se il gioco deve terminare in anticipo [NUMERO DI CASELLE VUOTE IN LINEA / MOSSE RIMANENTI (caselle vuote/2) = se il player può ancora vincere]
-            for(Pos p : board.positions()) { //Per tutte le posizioni della board (non mi servono tutte le posizioni a dire il vero, riformulare)
+            List<Pos> check = new ArrayList<>(); //Controllo se è ancora possibile la vittoria
+            for(int i = 0; i < w; i++) { check.add(new Pos(i, 0)); } //Posizioni del bordo inferiore
+            for(int j = 0; j < h; j++) { check.add(new Pos(0, j)); check.add(new Pos(w-1, j)); } //Posizioni del bordo sinistro e destro
+            for(Pos p : check) { if(!stateCheck(p)) { cT = 0; forced = 0; } }
 
-            }
-
-            if(cT == 2) { cT = 1; } //Passa il turno all'altro player se il gioco non è finito o se non è destinato a finire in patta
+            if(cT == 2) { cT = 1; } //Passa il turno all'altro player se il gioco non è finito o se non è destinato a finire in parità
             else if(cT == 1) { cT = 2; }
             gS.add(copy());
             return true;
@@ -175,6 +176,31 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         cT = 0; //Termina il game se la mossa non è valida.
         gS.add(copy());
         return false;
+    }
+
+    private boolean stateCheck(Pos p) {
+        int tot = 0;
+        for(Pos p1 : board.positions()) { if(board.get(p1) == null) { tot++; } }
+        List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.RIGHT, Board.Dir.UP_R, Board.Dir.UP_L);
+        for(Board.Dir d : directions) {
+            if(p.getB() == 0 && d.equals(Board.Dir.UP_L)) { continue; }
+            if(p.getB() == w-1 && d.equals(Board.Dir.UP_R)) { continue; }
+
+            Pos adj = board.adjacent(p, d);
+            PieceModel<Species> pm = null; int pmC = 0; int nC = 0;
+            while(true) {
+                if(pmC + nC == k) { if(tot/2 >= nC) { return true; } } //Condizione in cui è ancora possibile la vittoria
+                if(adj == null) { break; } //Se esco dalla board interrompo ogni controllo
+                if(board.get(adj) != null && pm == null) { pm = board.get(adj); pmC++; } //Se pm non è ancora stato assegnato e incontro una pedina
+                if(board.get(adj) == null && pm != null) { nC++; } //Se incontro una posizione vuota dopo una pedina
+                if(board.get(adj) != null) { //Caso in cui incontra una pedina e pmC è già stato assegnato
+                    if(pm != null && pm.equals(board.get(adj))) { pmC++; } //Incrementa pmC in caso incontra una pedina contigua
+                    if(pm != null && !pm.equals(board.get(adj))) { pmC = 0; nC = 0; } //Resetta il conteggio nel caso incontra una pedina avversaria
+                }
+            }
+        }
+
+        return false; //Se il gioco è destinato a finire in parità
     }
 
     @Override
@@ -215,10 +241,21 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public GameRuler<PieceModel<Species>> copy() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+    public GameRuler<PieceModel<Species>> copy() { return new MNKgame(time, w, h, k, player1, player2, Utils.bCopy(board, w, h), cT, forced, gS); }
+
+    private MNKgame(long time, int m, int n, int k, Player p1, Player p2, Board b, int cT, int forced, List gS) {
+        this.time = time;
+        this.w = m;
+        this.h = n;
+        this.k = k;
+        this.player1 = p1;
+        this.player2 = p2;
+        this.board = b;
+        this.cT = cT;
+        this.forced = forced;
+        this.gS = gS;
     }
 
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public Mechanics<PieceModel<Species>> mechanics() { return null; } //Temporaneo
 }
