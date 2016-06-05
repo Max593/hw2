@@ -111,8 +111,6 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
 
-        List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT, //Tutte le direzioni della board
-                Board.Dir.DOWN_L, Board.Dir.DOWN, Board.Dir.DOWN_R, Board.Dir.RIGHT, Board.Dir.UP_R);
         List<Board.Dir> halfDirections = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT, Board.Dir.DOWN_L); //Metà delle direzioni per applicazioni con opposite
 
         if(isValid(m) && m.getKind() != Move.Kind.RESIGN) { //Se si esegue una mossa valida che non è la Resa
@@ -155,7 +153,8 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
             List<Pos> check = new ArrayList<>(); //Controllo se è ancora possibile la vittoria
             for(int i = 0; i < w; i++) { check.add(new Pos(i, 0)); } //Posizioni del bordo inferiore
             for(int j = 0; j < h; j++) { check.add(new Pos(0, j)); check.add(new Pos(w-1, j)); } //Posizioni del bordo sinistro e destro
-            for(Pos p : check) { if(!stateCheck(p)) { cT = 0; forced = 0; } }
+            int c = 0; for(Pos p : check) { if(stateCheck(p)) { c++; } }
+            if(c == 0) { cT = 0; forced = 0; gS.add(copy()); return true; }
 
             if(cT == 2) { cT = 1; } //Passa il turno all'altro player se il gioco non è finito o se non è destinato a finire in parità
             else if(cT == 1) { cT = 2; }
@@ -180,11 +179,11 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
 
     private boolean stateCheck(Pos p) {
         int tot = 0;
-        for(Pos p1 : board.positions()) { if(board.get(p1) == null) { tot++; } }
+        for(Pos p1 : board.positions()) { if(board.get(p1) == null) { tot++; } } //Numero di caselle vuote sulla board
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.RIGHT, Board.Dir.UP_R, Board.Dir.UP_L);
         for(Board.Dir d : directions) {
-            if(p.getB() == 0 && d.equals(Board.Dir.UP_L)) { continue; }
-            if(p.getB() == w-1 && d.equals(Board.Dir.UP_R)) { continue; }
+            if(p.getB() == 0 && d.equals(Board.Dir.UP_L)) { break; }
+            if(p.getB() == w-1 && d.equals(Board.Dir.UP_R)) { break; }
 
             Pos adj = board.adjacent(p, d);
             PieceModel<Species> pm = null; int pmC = 0; int nC = 0;
@@ -193,10 +192,12 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                 if(adj == null) { break; } //Se esco dalla board interrompo ogni controllo
                 if(board.get(adj) != null && pm == null) { pm = board.get(adj); pmC++; } //Se pm non è ancora stato assegnato e incontro una pedina
                 if(board.get(adj) == null && pm != null) { nC++; } //Se incontro una posizione vuota dopo una pedina
+                if(board.get(adj) != null && nC > 0) { pm = board.get(adj); pmC = 1; nC = 0; } //Se incontro una pedina nuova dopo n < k spazi vuoti
                 if(board.get(adj) != null) { //Caso in cui incontra una pedina e pmC è già stato assegnato
                     if(pm != null && pm.equals(board.get(adj))) { pmC++; } //Incrementa pmC in caso incontra una pedina contigua
                     if(pm != null && !pm.equals(board.get(adj))) { pmC = 0; nC = 0; } //Resetta il conteggio nel caso incontra una pedina avversaria
                 }
+                adj = board.adjacent(adj, d); //Aggiorno alla posizione successiva
             }
         }
 
