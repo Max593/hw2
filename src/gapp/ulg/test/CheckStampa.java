@@ -1,6 +1,7 @@
 package gapp.ulg.test;
 
 import gapp.ulg.game.board.*;
+import gapp.ulg.games.MNKgame;
 import gapp.ulg.games.Othello;
 
 import java.util.*;
@@ -14,8 +15,8 @@ import java.util.concurrent.ConcurrentMap;
 public class CheckStampa {
 
     public static void main(String[] args) {
-        GameRuler<PieceModel<PieceModel.Species>> o1 = new Othello("Marco", "Alice");
-
+        GameRuler<PieceModel<PieceModel.Species>> o1 = new MNKgame(0, 5, 4, 4,"Marco", "Alice");
+/*
         String[] mArr = movs.split("\n");
         String[] bArr = boards.split("\n");
         String[] vmArr = valMovs.split("\n");
@@ -48,6 +49,20 @@ public class CheckStampa {
         o1.unMove();
         printer(o1.getBoard());
 */
+        Action a1 = new Action(new Pos(0,0), new PieceModel<>(PieceModel.Species.DISC, "nero"));
+        //Action a2 = new Action(new Pos(0,1), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        Action a2 = new Action(o1.getBoard().adjacent(new Pos(0,0), Board.Dir.RIGHT), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        Action a3 = new Action(o1.getBoard().adjacent(new Pos(0,0), Board.Dir.UP_R), new PieceModel<>(PieceModel.Species.DISC, "nero"));
+        Move m1 = new Move(Arrays.asList(a1));
+        Move m2 = new Move(Arrays.asList(a2));
+        Move m3 = new Move(Arrays.asList(a3));
+        o1.move(m1);
+        System.out.println("op");
+        o1.move(m2);
+        System.out.println("op");
+        o1.move(m3);
+        System.out.println("op");
+        printer(o1.getBoard(), 5,4);
 
     }
 
@@ -88,13 +103,13 @@ public class CheckStampa {
         System.out.println();
     }
 
-    public static void printer(Board b) {
-        for(int i = 0; i < 8; i++) {
+    public static void printer(Board b, int w, int h) {
+        for(int i = 0; i < w; i++) {
             String stamp = "";
-            for(int h = 0; h < 8; h++) {
-                if(b.get(new Pos(i, h)) == null) { stamp += "."; }
-                else if(b.get(new Pos(i, h)).equals(new PieceModel<>(PieceModel.Species.DISC, "nero"))) { stamp += "X"; }
-                else if(b.get(new Pos(i, h)).equals(new PieceModel<>(PieceModel.Species.DISC, "bianco"))) { stamp += "O"; }
+            for(int j = 0; j < h; j++) {
+                if(b.get(new Pos(i, j)) == null) { stamp += "."; }
+                else if(b.get(new Pos(i, j)).equals(new PieceModel<>(PieceModel.Species.DISC, "nero"))) { stamp += "X"; }
+                else if(b.get(new Pos(i, j)).equals(new PieceModel<>(PieceModel.Species.DISC, "bianco"))) { stamp += "O"; }
             }
             System.out.println(stamp);
         }
