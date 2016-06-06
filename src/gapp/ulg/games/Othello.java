@@ -165,7 +165,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     public boolean unMove() { //Vorrei scrivere board = copy board passata, non ci riesco
         if(gS.size() == 1) { return false; } //Se abbiamo appena iniziato il gioco
 
-        Board past = gS.get(gS.size()-2).getBoard(); //Prende la penultima board
+        Board<PieceModel<Species>> past = gS.get(gS.size()-2).getBoard(); //Prende la penultima board
         for(Pos p : board.positions()) { //Per ogni posizione della board
             if(board.get(p) != null && past.get(p) == null) { board.remove(p); } //Elimina tutti gli ADD
             else if(board.get(p) != null && !board.get(p).equals(past.get(p))) {
@@ -337,7 +337,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() {
+    public Mechanics<PieceModel<Species>> mechanics() { //Funziona, non lo toccherò mai più
 
         List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco")); //Tutti i pezzi di gioco
 

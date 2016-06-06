@@ -127,8 +127,8 @@ public class Utils {
         return Board.Dir.DOWN_L;
     }
 
-    public static Board bCopy(Board b, int w, int h) {
-        Board bCopy = new BoardOct(w, h);
+    public static BoardOct<PieceModel<Species>> bCopy(Board<PieceModel<Species>> b, int w, int h) { //Copia una BoardOct creando una board utilizzabile dai vari giochi
+        BoardOct<PieceModel<Species>> bCopy = new BoardOct<>(w, h);
         for(int i = 0; i < w; i++) {
             for(int j = 0; j < h; j++) {
                 Pos p = new Pos(i, j);

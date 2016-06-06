@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentMap;
 public class CheckStampa {
 
     public static void main(String[] args) {
-        GameRuler<PieceModel<PieceModel.Species>> o1 = new MNKgame(0, 3, 3, 3,"Marco", "Alice");
+        GameRuler<PieceModel<PieceModel.Species>> o1 = new MNKgame(0, 6, 5, 5,"Marco", "Alice");
 
         String[] mArr = movs.split("\n");
         String[] bArr = boards.split("\n");
@@ -29,16 +29,16 @@ public class CheckStampa {
                 System.out.println(vmArr[k]);
                 if(checkValidMoves(o1.validMoves(),vmArr[k])) { System.out.println("Valid Moves della mossa "+(k+1)+" OK"); }
                 System.out.println("Eseguo "+mArr[k].split("\\s")[1]);
-                printer(bArr[k+1], 3, 3);
+                printer(bArr[k+1], 6, 5);
                 o1.move(stringToMove(null, mArr[k].split("\\s")[1]));
-                printer(o1.getBoard(), 3, 3);
+                printer(o1.getBoard(), 6, 5);
                 k++;
                 if(eqBoard(o1.getBoard(), bArr[k])) { System.out.println("Mossa "+k+" eseguita"+
                 "\n ---------------------------"); } else { System.out.println("Mossa "+k+" NON eseguita"); break; }
                 if(k == mArr.length) { break; }
             }
         }
-        if(o1.result() == 2) { System.out.println("Punteggio finale ok"); }
+        if(o1.result() == 0) { System.out.println("Punteggio finale ok"); }
         else System.out.println("Punteggio non corrisponde: "+o1.result());
 
 /*
@@ -189,31 +189,46 @@ public class CheckStampa {
     }
 
     private static String boards =
-                    ".........\n" +
-                    "....X....\n" +
-                    "..O.X....\n" +
-                    "..O.X.X..\n" +
-                    "..O.X.X.O\n" +
-                    "..O.XXX.O\n" +
-                    "..OOXXX.O\n";
+                    "..............................\n" +
+                    "............X.................\n" +
+                    "............X....O............\n" +
+                    "............X....O.....X......\n" +
+                    "......O.....X....O.....X......\n" +
+                    "......O.....X....O.....X.X....\n" +
+                    "....O.O.....X....O.....X.X....\n" +
+                    "X...O.O.....X....O.....X.X....\n" +
+                    "X...O.O.....X....O.....X.X...O\n" +
+                    "X...O.O..X..X....O.....X.X...O\n" +
+                    "X...O.O..X..X....O..O..X.X...O\n" +
+                    "X...O.O..X..X...XO..O..X.X...O\n";
 
     private static String valMovs =
-                    "X1,1 X2,2 X0,0 X1,0 X2,1 X0,1 X0,2 X1,2 X2,0 RESIGN\n" +
-                    "O2,0 O0,0 O1,2 RESIGN O0,2 O1,0 O2,1 O0,1 O2,2\n" +
-                    "X2,2 X0,0 X1,0 X2,1 X0,1 X1,2 X2,0 RESIGN\n" +
-                    "O0,0 O1,2 RESIGN O1,0 O2,1 O0,1 O2,2\n" +
-                    "X0,0 X1,0 X2,1 X0,1 X1,2 RESIGN\n" +
-                    "O0,0 RESIGN O1,0 O2,1 O0,1\n" +
-                    "X0,0 X2,1 X0,1 RESIGN\n";
+                    "X0,3 X0,4 X2,2 X0,0 X2,1 X0,1 X2,4 X4,3 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X1,1 X3,4 X1,0 X1,3 X3,2 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
+                    "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O5,0 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O1,1 O3,2 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1 O4,3\n" +
+                    "X0,3 X0,4 X0,0 X2,1 X0,1 X2,4 X4,3 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X1,1 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
+                    "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O5,0 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O1,1 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1\n" +
+                    "X0,3 X0,4 X0,0 X2,1 X0,1 X2,4 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
+                    "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1\n" +
+                    "X0,3 X0,0 X2,1 X0,1 X2,4 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X1,4 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
+                    "RESIGN O0,3 O1,4 O3,1 O4,2 O5,4 O2,0 O3,0 O4,1 O4,0 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n" +
+                    "X0,3 X1,4 X3,4 X1,0 X2,1 X0,1 X1,3 X2,4 X0,2 X1,2 X2,3 X3,3 X4,4 RESIGN X3,0 X4,1 X5,3 X3,1 X4,2 X5,2 X2,0 X5,1 X4,0\n" +
+                    "RESIGN O0,3 O3,1 O4,2 O2,0 O3,0 O4,1 O4,0 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n" +
+                    "X0,3 X3,4 X1,0 X2,1 X0,1 X1,3 X2,4 X0,2 X1,2 X2,3 X3,3 X4,4 RESIGN X3,0 X4,1 X5,3 X3,1 X4,2 X5,2 X2,0 X5,1\n" +
+                    "RESIGN O0,3 O4,2 O2,0 O3,0 O4,1 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n";
 
     private static String movs =
-                    "1 X1,1\n" +
-                    "2 O0,2\n" +
-                    "1 X2,0\n" +
-                    "2 O2,2\n" +
-                    "1 X1,2\n" +
-                    "2 O1,0\n" +
-                    "1 X0,0\n";
+                    "1 X2,2\n" +
+                    "2 O3,2\n" +
+                    "1 X4,3\n" +
+                    "2 O1,1\n" +
+                    "1 X5,0\n" +
+                    "2 O0,4\n" +
+                    "1 X0,0\n" +
+                    "2 O5,4\n" +
+                    "1 X1,4\n" +
+                    "2 O4,0\n" +
+                    "1 X3,1\n" +
+                    "2 O2,3\n";
 }
 
 /* Game mnk 1
@@ -244,44 +259,47 @@ public class CheckStampa {
             0
  */
 
-/*
+/* Game mnk 2
             "..............................\n" +
-            "X0,3 X0,4 X2,2 X0,0 X2,1 X0,1 X2,4 X4,3 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X1,1 X3,4 X1,0 X1,3 X3,2 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
-            "1 X2,2\n" +
             "............X.................\n" +
-            "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O5,0 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O1,1 O3,2 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1 O4,3\n" +
-            "2 O3,2\n" +
             "............X....O............\n" +
-            "X0,3 X0,4 X0,0 X2,1 X0,1 X2,4 X4,3 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X1,1 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
-            "1 X4,3\n" +
             "............X....O.....X......\n" +
-            "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O5,0 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O1,1 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1\n" +
-            "2 O1,1\n" +
             "......O.....X....O.....X......\n" +
-            "X0,3 X0,4 X0,0 X2,1 X0,1 X2,4 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
-            "1 X5,0\n" +
             "......O.....X....O.....X.X....\n" +
-            "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1\n" +
-            "2 O0,4\n" +
             "....O.O.....X....O.....X.X....\n" +
-            "X0,3 X0,0 X2,1 X0,1 X2,4 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X1,4 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
-            "1 X0,0\n" +
             "X...O.O.....X....O.....X.X....\n" +
-            "RESIGN O0,3 O1,4 O3,1 O4,2 O5,4 O2,0 O3,0 O4,1 O4,0 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n" +
-            "2 O5,4\n" +
             "X...O.O.....X....O.....X.X...O\n" +
-            "X0,3 X1,4 X3,4 X1,0 X2,1 X0,1 X1,3 X2,4 X0,2 X1,2 X2,3 X3,3 X4,4 RESIGN X3,0 X4,1 X5,3 X3,1 X4,2 X5,2 X2,0 X5,1 X4,0\n" +
-            "1 X1,4\n" +
             "X...O.O..X..X....O.....X.X...O\n" +
-            "RESIGN O0,3 O3,1 O4,2 O2,0 O3,0 O4,1 O4,0 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n" +
-            "2 O4,0\n" +
             "X...O.O..X..X....O..O..X.X...O\n" +
+            "X...O.O..X..X...XO..O..X.X...O\n";
+
+            "X0,3 X0,4 X2,2 X0,0 X2,1 X0,1 X2,4 X4,3 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X1,1 X3,4 X1,0 X1,3 X3,2 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
+            "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O5,0 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O1,1 O3,2 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1 O4,3\n" +
+            "X0,3 X0,4 X0,0 X2,1 X0,1 X2,4 X4,3 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X1,1 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
+            "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O5,0 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O1,1 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1\n" +
+            "X0,3 X0,4 X0,0 X2,1 X0,1 X2,4 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
+            "RESIGN O1,4 O3,1 O5,4 O3,0 O1,2 O1,3 O3,4 O5,1 O1,0 O3,3 O5,2 O5,3 O0,4 O0,3 O4,2 O2,0 O4,1 O4,0 O0,0 O2,3 O2,4 O0,2 O2,1 O4,4 O0,1\n" +
+            "X0,3 X0,0 X2,1 X0,1 X2,4 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X1,4 X3,4 X1,0 X1,3 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
+            "RESIGN O0,3 O1,4 O3,1 O4,2 O5,4 O2,0 O3,0 O4,1 O4,0 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n" +
+            "X0,3 X1,4 X3,4 X1,0 X2,1 X0,1 X1,3 X2,4 X0,2 X1,2 X2,3 X3,3 X4,4 RESIGN X3,0 X4,1 X5,3 X3,1 X4,2 X5,2 X2,0 X5,1 X4,0\n" +
+            "RESIGN O0,3 O3,1 O4,2 O2,0 O3,0 O4,1 O4,0 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n" +
             "X0,3 X3,4 X1,0 X2,1 X0,1 X1,3 X2,4 X0,2 X1,2 X2,3 X3,3 X4,4 RESIGN X3,0 X4,1 X5,3 X3,1 X4,2 X5,2 X2,0 X5,1\n" +
+            "RESIGN O0,3 O4,2 O2,0 O3,0 O4,1 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n";
+
+            "1 X2,2\n" +
+            "2 O3,2\n" +
+            "1 X4,3\n" +
+            "2 O1,1\n" +
+            "1 X5,0\n" +
+            "2 O0,4\n" +
+            "1 X0,0\n" +
+            "2 O5,4\n" +
+            "1 X1,4\n" +
+            "2 O4,0\n" +
             "1 X3,1\n" +
-            "X...O.O..X..X...XO..O..X.X...O\n" +
-            "RESIGN O0,3 O4,2 O2,0 O3,0 O4,1 O1,2 O2,3 O1,3 O2,4 O3,4 O5,1 O0,2 O1,0 O2,1 O3,3 O4,4 O5,2 O0,1 O5,3\n" +
-            "2 O2,3\n" +
-            "0";
+            "2 O2,3\n";
+
+            0
  */
 
 /* Game 1
