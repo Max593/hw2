@@ -124,20 +124,18 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                     Pos adj = board.adjacent(pBase, d);
                     while(true) {
                         if(adj == null) { break; } //Se si esce dalla board
-                        else if(board.get(adj) == null) { break; } //Se è una pedina vuota
+                        else if(board.get(adj) == null || !board.get(adj).equals(m.getActions().get(0).getPiece())) { break; } //Se è una pedina vuota o non alleata
                         else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; adj = board.adjacent(adj, d); } //Se è una pedina alleata
-                        else if(!board.get(adj).equals(m.getActions().get(0).getPiece())) { break; } //Se è una pedina avversaria
                     }
                 } catch(NullPointerException e) { continue; }
 
                 if(counter < k) { //Se il contatore non ha raggiunto k
                     try { //Test nella direzione opposta
-                        Pos adj = board.adjacent(pBase, opposite(d));
+                        Pos adj = board.adjacent(pBase, opposite(d)); //Resetto l'adjacent nella direzione opposta
                         while(true) {
                             if (adj == null) { break; }
-                            else if(board.get(adj) == null) { break; }
-                            else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; board.adjacent(adj, opposite(d)); }
-                            else if(!board.get(adj).equals(m.getActions().get(0).getPiece())) { break; }
+                            else if(board.get(adj) == null || !board.get(adj).equals(m.getActions().get(0).getPiece())) { break; } //Se è una pedina vuota o non alleata
+                            else if(board.get(adj).equals(m.getActions().get(0).getPiece())) { counter++; adj = board.adjacent(adj, opposite(d)); }
                         }
                     } catch(NullPointerException e) { continue; }
                 }
@@ -161,7 +159,6 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                     return true;
                 }
             }
-
             cT = 0; forced = 0; gS.add(copy()); return true; //Se il ciclo precedente non ritorna true, il gioco è destinato a finire in parità
         }
 
@@ -180,57 +177,38 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         return false;
     }
 
-    private boolean stateCheck(Pos p) {
+    private boolean stateCheck(Pos p) { //Al momento loop su 2 pedine alleate consecutive, risoluzione in corso
         int tot = 0;
         for(Pos p1 : board.positions()) { if(board.get(p1) == null) { tot++; } } //Numero di caselle vuote sulla board
         List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.RIGHT, Board.Dir.UP_R, Board.Dir.UP_L);
 
         for(Board.Dir d : directions) {
+            if(!p.equals(new Pos(0,0))) { //Con esclusione di 0,0
+                if(p.getB() == 0 && d.equals(Board.Dir.UP_L)) { continue; } //Salta iterazione (fuori dalla board al passaggio 1)
+                else if(p.getT() == w-1 && (d.equals(Board.Dir.UP_R) || d.equals(Board.Dir.RIGHT))) { continue; } ////Salta iterazione (fuori dalla board al passaggio 1)
+                else if(p.getB() == 0 && d.equals(Board.Dir.UP)) { continue; } //Salta iterazione (Posizione sinistre, solo verso destra)
+                else if(p.getT() == 0 && d.equals(Board.Dir.RIGHT)) { continue; } //Salta iterazione (Posizione base, solo verso sopra)
+                else if(p.equals(new Pos(0,0))) { continue; } //Esegue controllo a parte
+            }
+            if(p.equals(new Pos(0,0)) && d.equals(Board.Dir.UP_L)) { continue; } //Unica condizione di 0,0
+
             try {
-                Pos adj = board.adjacent(p, d);
+                Pos adj = p; //Adiacente, cambia su ogni iterazione
                 PieceModel pm = null; int pmC = 0; int nC = 0;
                 while(true) {
-                    if(pmC + nC == k) { if(tot/2 >= nC) { return true; } } //Condizione in cui è ancora possibile la vittoria
+                    if(adj == null) { break; } //Per sicurezza (eventualmente esce dalla board)
                     else if(board.get(adj) != null && pm == null) { pm = board.get(adj); pmC++; } //Se pm non è ancora stato assegnato e incontro una pedina
-                    else if(board.get(adj) == null && pm != null) { nC++; } //Se incontro una posizione vuota dopo una pedina
-                    else if(board.get(adj) != null && nC > 0) { pm = board.get(adj); pmC = 1; nC = 0; } //Se incontro una pedina nuova dopo n != 0 spazi vuoti
-                    else if(pm != null && pm.equals(board.get(adj))) { pmC++; } //Incrementa pmC in caso incontra una pedina contigua
-                    else if(pm != null && !pm.equals(board.get(adj))) { pmC = 0; nC = 0; } //Resetta il conteggio nel caso incontra una pedina avversaria
+                    else if(board.get(adj) == null) { nC++; } //Se incontro una posizione vuota
+                    else if(pm != null && pm.equals(board.get(adj))) { pmC++; } //Incrementa pmC in caso incontra una pedina alleata
+                    else if(!board.get(adj).equals(pm) && nC > 0) { pm = board.get(adj); pmC = 1; nC = 0; } //Se incontro una pedina avversaria dopo n > 0 spazi vuoti
                     adj = board.adjacent(adj, d); //Aggiorno alla posizione successiva
                 }
-            } catch(NullPointerException e) { continue; }
+                if(pmC + nC == k && tot > nC) { return true; } //Condizione in cui è ancora possibile la vittoria (fine del metodo)
+            } catch(NullPointerException ignored) {}
         }
 
-        return false; //Se il gioco è destinato a finire in parità
+        return false; //Il gioco è destinato a finire in parità
     }
-
-/*
-    private boolean stateCheck(Pos p) {
-        int tot = 0;
-        for(Pos p1 : board.positions()) { if(board.get(p1) == null) { tot++; } } //Numero di caselle vuote sulla board
-        List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.RIGHT, Board.Dir.UP_R, Board.Dir.UP_L);
-
-        for(Board.Dir d : directions) {
-
-            Pos adj = board.adjacent(p, d);
-            PieceModel<Species> pm = null; int pmC = 0; int nC = 0;
-            while(true) {
-                if(pmC + nC == k) { if(tot/2 >= nC) { return true; } } //Condizione in cui è ancora possibile la vittoria
-                if(adj == null) { break; } //Se esco dalla board interrompo ogni controllo
-                if(board.get(adj) != null && pm == null) { pm = board.get(adj); pmC++; } //Se pm non è ancora stato assegnato e incontro una pedina
-                if(board.get(adj) == null && pm != null) { nC++; } //Se incontro una posizione vuota dopo una pedina
-                if(board.get(adj) != null && nC > 0) { pm = board.get(adj); pmC = 1; nC = 0; } //Se incontro una pedina nuova dopo n < k spazi vuoti
-                if(board.get(adj) != null) { //Caso in cui incontra una pedina e pmC è già stato assegnato
-                    if(pm != null && pm.equals(board.get(adj))) { pmC++; } //Incrementa pmC in caso incontra una pedina contigua
-                    if(pm != null && !pm.equals(board.get(adj))) { pmC = 0; nC = 0; } //Resetta il conteggio nel caso incontra una pedina avversaria
-                }
-                adj = board.adjacent(adj, d); //Aggiorno alla posizione successiva
-            }
-        }
-
-        return false; //Se il gioco è destinato a finire in parità
-    }
-     */
 
     @Override
     public boolean unMove() {

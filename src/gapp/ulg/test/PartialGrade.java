@@ -506,7 +506,7 @@ public class PartialGrade {
                 while (true) {
                     String sb = game[k++];
                     if (sb.length() != w * h) {
-                        if (Integer.parseInt(sb) != gR.result()) return err("result()");
+                        if (Integer.parseInt(sb) != gR.result()) return err("result() "+gR.result()+", "+Integer.parseInt(sb));
                         break;
                     }
                     if (!eqBoard(board, sb)) return err("board");
