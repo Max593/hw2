@@ -365,9 +365,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                 public Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> call() throws Exception {
                     Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> res = new HashMap<>(); //Risultato
                     othello.move(mov); Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
-                    othello.getBoard().positions().stream().filter(p -> othello.getBoard().get(p) != null).forEach(p -> {
-                        mapSit.put(p, othello.getBoard().get(p));
-                    });
+                    othello.getBoard().positions().stream().filter(p -> othello.getBoard().get(p) != null).forEach(p -> mapSit.put(p, othello.getBoard().get(p)));
                     res.put(mov, new Situation<>(mapSit, othello.turn()));
                     return res;
                 }

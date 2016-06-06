@@ -62,6 +62,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         this.cT = 1;
         this.forced = -1;
         this.gS = new ArrayList<>();
+        gS.add(copy());
         this.player1 = new RandPlayer<>(p1); this.player2 = new RandPlayer<>(p2);
         player1.setGame(this); player2.setGame(this);
     }
@@ -212,7 +213,15 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
 
     @Override
     public boolean unMove() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(gS.size() == 1) { return false; } //Se abbiamo appena iniziato il gioco
+
+        Board<PieceModel<Species>> past = gS.get(gS.size()-2).getBoard(); //Prende la penultima board
+        board.positions().stream().filter(p -> board.get(p) != null && past.get(p) == null).forEach(p -> board.remove(p));
+
+        cT = gS.get(gS.size()-2).turn(); //Ritorna al turno di gioco passato (ritorna anche in gioco se necessario)
+        gS.remove(gS.size()-1); //Elimina lo status su cui è stato fatto unMove
+        player1.setGame(copy()); player2.setGame(copy()); //Reimposta i players allo stato attuale
+        return true;
     }
 
     @Override
@@ -230,9 +239,10 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
     /** Ogni mossa (diversa dall'abbandono) è rappresentata da una sola {@link Action}
      * di tipo {@link Action.Kind#ADD}. */
     @Override
-    public Set<Move<PieceModel<Species>>> validMoves() {
+    public Set<Move<PieceModel<Species>>> validMoves() { //Letteralmente 1 mossa possibile per ogni posizione vuota
         if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
-        Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
+
+        Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato, anche se vuoto verrà ritornato
         PieceModel<Species> pP = new PieceModel<>(Species.DISC, "nero");
         if(cT == 2) { pP = new PieceModel<>(Species.DISC, "bianco"); } //Se sta giocando il player 2;
 
@@ -264,5 +274,24 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() { return null; } //Temporaneo
+    public Mechanics<PieceModel<Species>> mechanics() { //Sembra essere abbastanza rapido (Thread NON usati)
+
+        List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco")); //Tutti i pezzi di gioco
+        Map<Pos, PieceModel<Species>> posMap = new HashMap<>(); //Usato per la situazione starter (Completamente vuota all'inizio)
+
+        Next<PieceModel<Species>> prossimaM = s -> {
+            Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new HashMap<>(); //Mappa soluzione
+
+            for(Move<PieceModel<Species>> m : validMoves()) {
+                Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
+                GameRuler<PieceModel<Species>> mnk = copy(); mnk.move(m); //Eseguo la mossa sulla copia del gioco
+                mnk.getBoard().positions().stream().filter(p -> mnk.getBoard().get(p) != null).forEach(p -> mapSit.put(p, mnk.getBoard().get(p)));
+                nextMoves.put(m, new Situation<>(mapSit, mnk.turn()));
+            }
+
+            return nextMoves;
+        };
+
+        return new Mechanics<>(time, Collections.unmodifiableList(pcs), board.positions(), 2, new Situation<>(posMap, 1), prossimaM);
+    }
 }
