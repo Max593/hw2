@@ -200,10 +200,10 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                     else if(board.get(adj) != null && pm == null) { pm = board.get(adj); pmC++; } //Se pm non è ancora stato assegnato e incontro una pedina
                     else if(board.get(adj) == null) { nC++; } //Se incontro una posizione vuota
                     else if(pm != null && pm.equals(board.get(adj))) { pmC++; } //Incrementa pmC in caso incontra una pedina alleata
-                    else if(!board.get(adj).equals(pm) && nC > 0) { pm = board.get(adj); pmC = 1; nC = 0; } //Se incontro una pedina avversaria dopo n > 0 spazi vuoti
+                    else if(!board.get(adj).equals(pm)) { pm = board.get(adj); pmC = 1; nC = 0; } //Se incontro una pedina avversaria dopo n > 0 spazi vuoti
                     adj = board.adjacent(adj, d); //Aggiorno alla posizione successiva
                 }
-                if(pmC + nC == k && tot > nC) { return true; } //Condizione in cui è ancora possibile la vittoria (fine del metodo)
+                if(pmC + nC >= k && tot > nC) {System.out.println(d+" "+p.getB()+","+p.getT()); return true; } //Condizione in cui è ancora possibile la vittoria (fine del metodo)
             } catch(NullPointerException ignored) {}
         }
 

@@ -100,9 +100,9 @@ public class CheckStampa {
     private static void printer(String b, int w, int h) {
         int i = 0;
         while(i != w*h) {
-            System.out.println(b.substring(0, w));
-            b = b.substring(w);
-            i += w;
+            System.out.println(b.substring(0, h));
+            b = b.substring(h);
+            i += h;
         }
         System.out.println();
     }
@@ -200,7 +200,8 @@ public class CheckStampa {
                     "X...O.O.....X....O.....X.X...O\n" +
                     "X...O.O..X..X....O.....X.X...O\n" +
                     "X...O.O..X..X....O..O..X.X...O\n" +
-                    "X...O.O..X..X...XO..O..X.X...O\n";
+                    "X...O.O..X..X...XO..O..X.X...O\n" +
+                    "X...O.O..X..XO..XO..O..X.X...O\n";
 
     private static String valMovs =
                     "X0,3 X0,4 X2,2 X0,0 X2,1 X0,1 X2,4 X4,3 X0,2 X2,3 X4,4 RESIGN X3,0 X5,3 X3,1 X5,2 X5,1 X5,0 X1,4 X1,1 X3,4 X1,0 X1,3 X3,2 X1,2 X3,3 X5,4 X4,1 X4,2 X2,0 X4,0\n" +
