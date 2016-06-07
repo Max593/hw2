@@ -61,8 +61,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
         this.board = new BoardOct<>(m,n);
         this.cT = 1;
         this.forced = -1;
-        this.gS = new ArrayList<>();
-        gS.add(copy());
+        this.gS = new ArrayList<>(); gS.add(copy()); //Inizializzo la lista dei game status
         this.player1 = new RandPlayer<>(p1); this.player2 = new RandPlayer<>(p2);
         player1.setGame(this); player2.setGame(this);
     }
@@ -77,9 +76,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
     public String name() { return String.valueOf(w)+","+String.valueOf(h)+","+String.valueOf(k)+"-game"; }
 
     @Override
-    public <T> T getParam(String name, Class<T> c) {
-        return null;
-    } //Temporaneo
+    public <T> T getParam(String name, Class<T> c) { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
 
     @Override
     public List<String> players() { return Collections.unmodifiableList(Arrays.asList(player1.name(), player2.name())); }

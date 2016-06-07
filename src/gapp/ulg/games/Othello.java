@@ -100,9 +100,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     public String name() { return "Othello"+String.valueOf(size)+"x"+String.valueOf(size); } //Nome del gioco con le dimensioni della board
 
     @Override
-    public <T> T getParam(String name, Class<T> c) {
-        return null;
-    } //Temporaneo, ancora da scrivere
+    public <T> T getParam(String name, Class<T> c) { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
 
     @Override
     public List<String> players() { return Collections.unmodifiableList(Arrays.asList(player1.name(), player2.name())); }
@@ -356,7 +354,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                 private Move<PieceModel<Species>> mov;
                 private GameRuler<PieceModel<Species>> othello;
 
-                public Operation(Move m, GameRuler g) {
+                private Operation(Move m, GameRuler g) {
                     this.mov = m;
                     this.othello = g;
                 }
