@@ -208,26 +208,23 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             if(board.get(p) == null) {
                 Set<Pos> swap = new HashSet<>();
                 for(Board.Dir d : directions) {
-                    Set<Pos> tSwap = new HashSet<>();
                     try {
                         if(board.get(board.adjacent(p, d)).equals(pA)) {
-                            Pos next = board.adjacent(p, d);
+                            Set<Pos> tSwap = new HashSet<>();
+                            Pos adj = board.adjacent(p, d);
                             while(true) {
-                                if(board.get(next) == null) { tSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tSwap e interrompe il ciclo
-                                if(board.get(next).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
-                                if(board.adjacent(next,d) == null) { tSwap = new HashSet<>(); break; } //Se va uscendo dalla board
-                                if(board.get(next).equals(pA)) { tSwap.add(next); next = board.adjacent(next, d); } //Aggiunge la Pos alla tSwap e aggiorna next
+                                if(board.get(adj) == null) { tSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tSwap e interrompe il ciclo
+                                if(board.get(adj).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
+                                if(board.adjacent(adj,d) == null) { tSwap = new HashSet<>(); break; } //Se va uscendo dalla board
+                                if(board.get(adj).equals(pA)) { tSwap.add(adj); adj = board.adjacent(adj, d); } //Aggiunge la Pos alla tSwap e aggiorna adj
                             }
+                            if(tSwap.size() > 0) { swap.addAll(tSwap); }
                         }
-                    } catch (NullPointerException e) { continue; }
-                    if(tSwap.size() > 0) { swap.addAll(tSwap); }
+                    } catch (NullPointerException ignored) { }
                 }
                 if(swap.size() > 0) {
-                    Pos[] swapArr = new Pos[swap.size()];
-                    swapArr = swap.toArray(swapArr);
-                    Action aA = new Action(p, pP);
-                    Action aS = new Action(pP, swapArr);
-                    moveSet.add(new Move(Arrays.asList(aA, aS)));
+                    Pos[] swapArr = swap.toArray(new Pos[swap.size()]);
+                    moveSet.add(new Move(Arrays.asList(new Action(p, pP), new Action(pP, swapArr))));
                 }
             }
         }
@@ -235,79 +232,6 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         if(moveSet.size() > 0) { moveSet.add(new Move(Move.Kind.RESIGN)); }
         return Collections.unmodifiableSet(moveSet);
     }
-/*
-    @Override
-    public Set<Move<PieceModel<Species>>> validMoves() { //Multithreading troppo lento per qualche motivo...
-        if(cT == 0) { throw new IllegalStateException("Il gioco è già terminato"); }
-        Set<Move<PieceModel<Species>>> moveSet = new HashSet<>(); //Insieme risultato anche se vuoto verrà ritornato
-        List<Board.Dir> directions = Arrays.asList(Board.Dir.UP, Board.Dir.UP_L, Board.Dir.LEFT,
-                Board.Dir.DOWN_L, Board.Dir.DOWN, Board.Dir.DOWN_R, Board.Dir.RIGHT, Board.Dir.UP_R);
-
-        class Operation implements Callable {
-            private Pos p;
-            public Operation(Pos p) { this.p = p; }
-
-            @Override
-            public Set<Move<PieceModel<Species>>> call() throws Exception {
-                PieceModel<Species> pA = new PieceModel<>(Species.DISC, "bianco"), pP = new PieceModel<>(Species.DISC, "nero");
-                if(cT == 2) { pA = new PieceModel<>(Species.DISC, "nero"); pP = new PieceModel<>(Species.DISC, "bianco"); } //Se sta giocando il player 2;
-                Set<Move<PieceModel<Species>>> tempSet = new HashSet<>();
-                Set<Pos> swap = new HashSet<>();
-
-                for(Board.Dir d : directions) {
-                    Set<Pos> tSwap = new HashSet<>();
-                    try {
-                        if(board.get(board.adjacent(p, d)).equals(pA)) {
-                            Pos next = board.adjacent(p, d);
-                            while(true) {
-                                if(board.get(next) == null) { tSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tSwap e interrompe il ciclo
-                                if(board.get(next).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
-                                if(board.adjacent(next,d) == null) { tSwap = new HashSet<>(); break; } //Se va uscendo dalla board
-                                if(board.get(next).equals(pA)) { tSwap.add(next); next = board.adjacent(next, d); } //Aggiunge la Pos alla tSwap e aggiorna next
-                            }
-                        }
-                    } catch (NullPointerException e) { continue; }
-                    if(tSwap.size() > 0) { swap.addAll(tSwap); }
-                }
-
-                if(swap.size() > 0) {
-                    Pos[] swapArr = new Pos[swap.size()];
-                    swapArr = swap.toArray(swapArr);
-                    Action aA = new Action(p, pP);
-                    Action aS = new Action(pP, swapArr);
-                    tempSet.add(new Move(Arrays.asList(aA, aS)));
-                }
-
-                return tempSet;
-            }
-        }
-
-        ExecutorService service = Executors.newCachedThreadPool();
-        Set<Future<Set<Move<PieceModel<Species>>>>> listFut = new HashSet<>();
-        for(Pos p : board.positions()) { //Per ogni posizione della board
-            if(board.get(p) == null) {
-                Callable<Set<Move<PieceModel<Species>>>> callable = new Operation(p);
-                Future<Set<Move<PieceModel<Species>>>> future = service.submit(callable);
-                listFut.add(future);
-            }
-        }
-
-        for(Future<Set<Move<PieceModel<Species>>>> future : listFut) {
-            try {
-                if(!future.get().isEmpty()) { moveSet.addAll(future.get()); }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-        service.shutdown();
-        if(moveSet.size() > 0) { moveSet.add(new Move(Move.Kind.RESIGN)); }
-        return Collections.unmodifiableSet(moveSet);
-    }
-     */
 
     @Override
     public double score(int i) {
