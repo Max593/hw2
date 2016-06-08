@@ -100,7 +100,28 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     public String name() { return "Othello"+String.valueOf(size)+"x"+String.valueOf(size); } //Nome del gioco con le dimensioni della board
 
     @Override
-    public <T> T getParam(String name, Class<T> c) { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public <T> T getParam(String name, Class<T> c) {
+        if(name == null || c == null) { throw new NullPointerException("Il nome name o la classe sono null"); }
+        if(!Arrays.asList("Time", "Board").contains(name)) { throw new IllegalArgumentException("Name non è un parametro di gioco"); }
+
+        if(name.equals("Time")) {
+            if(time <= 0) { return (T) "No limit"; }
+            for (Map.Entry<String, Long> e : Utils.mapTime().entrySet()) {
+                if(e.getValue().equals(time)) {
+                    if(!c.isInstance(e.getKey())) { throw new ClassCastException("Il tipo del valore della parametro è incompatibile con la classe c"); }
+                    return (T) e.getKey();
+                }
+            }
+        }
+
+        if(name.equals("Board")) {
+            String ret = String.valueOf(size)+"x"+String.valueOf(size);
+            if(!c.isInstance(ret)) { throw new ClassCastException("Il tipo del valore della parametro è incompatibile con la classe c"); }
+            return (T) ret;
+        }
+
+        return null; //Solo per il test
+    }
 
     @Override
     public List<String> players() { return Collections.unmodifiableList(Arrays.asList(player1.name(), player2.name())); }

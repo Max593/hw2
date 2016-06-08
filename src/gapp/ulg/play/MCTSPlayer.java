@@ -1,9 +1,11 @@
 package gapp.ulg.play;
 
 import gapp.ulg.game.board.*;
+import gapp.ulg.games.MNKgame;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.*;
 
 
 /** <b>IMPLEMENTARE I METODI SECONDO LE SPECIFICHE DATE NEI JAVADOC. Non modificare
@@ -69,7 +71,14 @@ public class MCTSPlayer<P> implements Player<P> {
     public Move<P> getMove() {
         Map<Pos, P> mapAct = new HashMap<>(); //Mappa situazione attuale
         for(Pos p : gameRul.getBoard().get()) { mapAct.put(p, gameRul.getBoard().get(p)); }
-        Map<Move<P>, GameRuler.Situation<P>> mNext = gameRul.mechanics().next.get(new GameRuler.Situation<P>(mapAct, gameRul.turn())); //Mappa con mossa e situazione successiva
+
+        ConcurrentMap<Move<P>, GameRuler.Situation<P>> mNext = new ConcurrentHashMap<>(); //Mappa con mossa e situazione successiva (Verificare se Concurrent basta come race condition)
+        mNext.putAll(gameRul.mechanics().next.get(new GameRuler.Situation<>(mapAct, gameRul.turn()))); //Estratta dal Next di Mechanics del gioco
+        mNext.remove(new Move<P>(Move.Kind.RESIGN)); //Elimino l'eventualità del resign
+
+        double rollouts = Math.ceil(rpm/mNext.size()); //Numero di Rollouts da eseguire
+
+        //GameRuler<P> nextGame = new MNKgame(); //Attendere risoluzione di getParam, diviene tutto più semplice
 
         return null;
     }
