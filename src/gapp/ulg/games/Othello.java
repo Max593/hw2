@@ -204,28 +204,35 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         PieceModel<Species> pA = new PieceModel<>(Species.DISC, "bianco"), pP = new PieceModel<>(Species.DISC, "nero");
         if(cT == 2) { pA = new PieceModel<>(Species.DISC, "nero"); pP = new PieceModel<>(Species.DISC, "bianco"); } //Se sta giocando il player 2;
 
-        for(Pos p : board.positions()) { //Per ogni posizione della board
-            if(board.get(p) == null) {
-                Set<Pos> swap = new HashSet<>();
-                for(Board.Dir d : directions) {
-                    try {
-                        if(board.get(board.adjacent(p, d)).equals(pA)) {
-                            Set<Pos> tSwap = new HashSet<>();
-                            Pos adj = board.adjacent(p, d);
-                            while(true) {
-                                if(board.get(adj) == null) { tSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tSwap e interrompe il ciclo
-                                if(board.get(adj).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
-                                if(board.adjacent(adj,d) == null) { tSwap = new HashSet<>(); break; } //Se va uscendo dalla board
-                                if(board.get(adj).equals(pA)) { tSwap.add(adj); adj = board.adjacent(adj, d); } //Aggiunge la Pos alla tSwap e aggiorna adj
-                            }
-                            if(tSwap.size() > 0) { swap.addAll(tSwap); }
+        Set<Pos> acceptable = new HashSet<>(); //Posizioni vuote adiacenti ai pezzi avversari
+        for(Pos p : board.get(pA)) {
+            for(Board.Dir d : directions) {
+                try {
+                    if(board.get(board.adjacent(p, d)) == null) { acceptable.add(board.adjacent(p, d)); }
+                } catch (NullPointerException ignored) {}
+            }
+        }
+
+        for(Pos p : acceptable) { //Per ogni posizione della board
+            Set<Pos> swap = new HashSet<>();
+            for(Board.Dir d : directions) {
+                try {
+                    if(board.get(board.adjacent(p, d)).equals(pA)) {
+                        Set<Pos> tSwap = new HashSet<>();
+                        Pos adj = board.adjacent(p, d);
+                        while(true) {
+                            if(board.get(adj) == null) { tSwap = new HashSet<>(); break; } //Se incontra una posizione vuota svuota la lista tSwap e interrompe il ciclo
+                            if(board.get(adj).equals(pP)) { break; } //Interrompe il ciclo avendo trovato una pedina propria
+                            if(board.adjacent(adj,d) == null) { tSwap = new HashSet<>(); break; } //Se va uscendo dalla board
+                            if(board.get(adj).equals(pA)) { tSwap.add(adj); adj = board.adjacent(adj, d); } //Aggiunge la Pos alla tSwap e aggiorna adj
                         }
-                    } catch (NullPointerException ignored) { }
-                }
-                if(swap.size() > 0) {
-                    Pos[] swapArr = swap.toArray(new Pos[swap.size()]);
-                    moveSet.add(new Move(Arrays.asList(new Action(p, pP), new Action(pP, swapArr))));
-                }
+                        if(tSwap.size() > 0) { swap.addAll(tSwap); }
+                    }
+                } catch (NullPointerException ignored) { }
+            }
+            if(swap.size() > 0) {
+                Pos[] swapArr = swap.toArray(new Pos[swap.size()]);
+                moveSet.add(new Move(Arrays.asList(new Action(p, pP), new Action(pP, swapArr))));
             }
         }
 
