@@ -6,6 +6,8 @@ import gapp.ulg.game.GameFactory;
 import static gapp.ulg.game.board.PieceModel.Species;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 /** <b>IMPLEMENTARE I METODI INDICATI CON "DA IMPLEMENTARE" SECONDO LE SPECIFICHE
@@ -129,16 +131,27 @@ public class Utils {
 
     public static BoardOct<PieceModel<Species>> bCopy(Board<PieceModel<Species>> b, int w, int h) { //Copia una BoardOct creando una board utilizzabile dai vari giochi
         BoardOct<PieceModel<Species>> bCopy = new BoardOct<>(w, h);
-        for(int i = 0; i < w; i++) {
-            for(int j = 0; j < h; j++) {
-                Pos p = new Pos(i, j);
-                if(b.get(p) != null) {
-                    bCopy.put(b.get(p), p);
-                }
-            }
-        }
+        for(Pos p : b.get()) { bCopy.put(b.get(p), p); }
 
         return bCopy;
+    }
+
+    public static Map<String, Long> mapTime() { //A chiamata testuale ritorna elemento di tempo in long
+        Map<String, Long> mapTime = new HashMap<>();
+        for(String s : Arrays.asList("No limit", "1s", "2s", "3s", "5s", "10s", "20s", "30s", "1m", "2m", "5m")) {
+            if(s.equals("No limit")) { mapTime.put(s, (long) -1); }
+            else if(s.equals("1s")) { mapTime.put(s, (long) 1000); }
+            else if(s.equals("2s")) { mapTime.put(s, (long) 2000); }
+            else if(s.equals("3s")) { mapTime.put(s, (long) 3000); }
+            else if(s.equals("5s")) { mapTime.put(s, (long) 5000); }
+            else if(s.equals("10s")) { mapTime.put(s, (long) 10000); }
+            else if(s.equals("20s")) { mapTime.put(s, (long) 20000); }
+            else if(s.equals("30s")) { mapTime.put(s, (long) 30000); }
+            else if(s.equals("1m")) { mapTime.put(s, (long) 60_000); }
+            else if(s.equals("2m")) { mapTime.put(s, (long) 120_000); }
+            else if(s.equals("5m")) { mapTime.put(s, (long) 300_000); }
+        }
+        return mapTime;
     }
 }
 

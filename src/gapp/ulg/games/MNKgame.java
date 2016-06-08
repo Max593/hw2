@@ -53,7 +53,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
      * le condizioni 1 <= {@code k} <= max{{@code M,N}} <= 20 e 1 <= min{{@code M,N}} */
     public MNKgame(long time, int m, int n, int k, String p1, String p2) {
         if(p1 == null || p2 == null) { throw new NullPointerException("Player1 o Player2 non può essere null"); }
-        if(m > 20 || n > 20 || m < 1 || n < 1 || k < 1 || k > 20) { throw new IllegalArgumentException("Uno dei valori di gioco non è accettabile"); }
+        if(m > 20 || n > 20 || m < 1 || n < 1 || k < 1 || k > 20) { throw new IllegalArgumentException("Uno dei valori di gioco non è accettabile"); } //Da correggere!!
         this.time = time;
         this.w = m;
         this.h = n;

@@ -18,7 +18,7 @@ import java.util.Random;
  * @param <P>  tipo del modello dei pezzi */
 public class RandPlayer<P> implements Player<P> {
     public String name;
-    public GameRuler<P> gameRul;
+    private GameRuler<P> gameRul;
 
     /** Crea un giocatore random, capace di giocare a un qualsiasi gioco, che ad
      * ogni suo turno fa una mossa scelta in modo random tra quelle valide.
@@ -44,7 +44,6 @@ public class RandPlayer<P> implements Player<P> {
         if(gameRul == null || gameRul.result() != -1) { throw new IllegalStateException("Nessun gioco impostato o ormai terminato"); }
         if(m == null) { throw new NullPointerException("La mossa non può essere null"); }
         if(!Arrays.asList(1, 2).contains(i) || !gameRul.isValid(m)) { throw new IllegalArgumentException("Indice di turnazione errato o la mossa non è consentita nella situazione di gioco attuale"); }
-        ;
     }
 
     @Override

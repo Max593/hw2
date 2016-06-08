@@ -4,6 +4,7 @@ import gapp.ulg.game.GameFactory;
 import gapp.ulg.game.Param;
 import gapp.ulg.game.board.GameRuler;
 import gapp.ulg.game.board.PieceModel;
+import gapp.ulg.game.util.Utils;
 
 import static gapp.ulg.game.board.PieceModel.Species;
 
@@ -16,27 +17,12 @@ import java.util.*;
  * I {@link GameRuler} fabbricati dovrebbero essere oggetti {@link Othello}. */
 public class OthelloFactory implements GameFactory<GameRuler<PieceModel<Species>>> {
     private String[] pNames;
-    private Map<String, Long> map = new HashMap<>();
+    private Map<String, Long> map = Utils.mapTime();
     private long tempo;
     private int dimensione;
 
     /** Crea una fattoria di {@link GameRuler} per giocare a Othello */
     public OthelloFactory() {
-        for(Object i : params().get(0).values()) {
-            String s = (String) i;
-            if(s.equals("No limit")) { map.put(s, (long) -1); }
-            else if(s.equals("1s")) { map.put(s, (long) 1000); }
-            else if(s.equals("2s")) { map.put(s, (long) 2000); }
-            else if(s.equals("3s")) { map.put(s, (long) 3000); }
-            else if(s.equals("5s")) { map.put(s, (long) 5000); }
-            else if(s.equals("10s")) { map.put(s, (long) 10000); }
-            else if(s.equals("20s")) { map.put(s, (long) 20000); }
-            else if(s.equals("30s")) { map.put(s, (long) 30000); }
-            else if(s.equals("1m")) { map.put(s, (long) 60_000); }
-            else if(s.equals("2m")) { map.put(s, (long) 120_000); }
-            else if(s.equals("5m")) { map.put(s, (long) 300_000); }
-        }
-
         this.tempo = -1; //Tempo di default
         this.dimensione = 8; //Dimensione di default
     }

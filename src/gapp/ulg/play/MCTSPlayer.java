@@ -2,6 +2,9 @@ package gapp.ulg.play;
 
 import gapp.ulg.game.board.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /** <b>IMPLEMENTARE I METODI SECONDO LE SPECIFICHE DATE NEI JAVADOC. Non modificare
  * le intestazioni dei metodi.</b>
@@ -28,6 +31,10 @@ import gapp.ulg.game.board.*;
  * numero <i>M</i> di mosse possibili (è sempre esclusa {@link Move.Kind#RESIGN}).
  * @param <P>  tipo del modello dei pezzi */
 public class MCTSPlayer<P> implements Player<P> {
+    public String name;
+    private int rpm;
+    private boolean parallel;
+    private GameRuler<P> gameRul = null;
     /** Crea un {@code MCTSPlayer} con un limite dato sul numero di rollouts per
      * mossa.
      *
@@ -37,24 +44,33 @@ public class MCTSPlayer<P> implements Player<P> {
      *                  di sfruttare il parallelismo della macchina
      * @throws NullPointerException se {@code name} è null */
     public MCTSPlayer(String name, int rpm, boolean parallel) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(name == null) { throw new NullPointerException("Il nome del player non può essere null"); }
+        this.name = name;
+        this.parallel = parallel;
+        if(rpm < 1) { this.rpm = 1; }
+        else this.rpm = rpm;
     }
 
     @Override
-    public String name() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public String name() { return name; }
 
     @Override
     public void setGame(GameRuler<P> g) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(g == null) { throw new IllegalArgumentException("Il gioco non può essere null"); }
+        gameRul = g;
     }
 
     @Override
-    public void moved(int i, Move<P> m) {
+    public void moved(int i, Move<P> m) { //Non ho ancora la minima idea di cosa faccia sta cosa...
         throw new UnsupportedOperationException("DA IMPLEMENTARE");
     }
 
     @Override
     public Move<P> getMove() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        Map<Pos, P> mapAct = new HashMap<>(); //Mappa situazione attuale
+        for(Pos p : gameRul.getBoard().get()) { mapAct.put(p, gameRul.getBoard().get(p)); }
+        Map<Move<P>, GameRuler.Situation<P>> mNext = gameRul.mechanics().next.get(new GameRuler.Situation<P>(mapAct, gameRul.turn())); //Mappa con mossa e situazione successiva
+
+        return null;
     }
 }
