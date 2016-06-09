@@ -1,9 +1,6 @@
 package gapp.ulg.play;
 
 import gapp.ulg.game.board.*;
-import gapp.ulg.game.util.Utils;
-import gapp.ulg.games.MNKgame;
-import gapp.ulg.games.MNKgameFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -33,7 +30,7 @@ import java.util.concurrent.*;
  * della divisione decimale del numero di rollout per mossa <i>RPM</i> diviso il
  * numero <i>M</i> di mosse possibili (è sempre esclusa {@link Move.Kind#RESIGN}).
  * @param <P>  tipo del modello dei pezzi */
-public class MCTSPlayer<P> implements Player<P> {
+public class MCTSPlayer<P> implements Player<P> { //Non ho ancora toccato Parallel, il suo utilizzo sarà importante nel test Mix nascosto
     public String name;
     private int rpm;
     private boolean parallel;
@@ -70,33 +67,36 @@ public class MCTSPlayer<P> implements Player<P> {
 
     @Override
     public Move<P> getMove() {
+        if (gameRul == null || gameRul.result() > -1 ||
+                gameRul.players().indexOf(name) + 1 != gameRul.turn()) {
+            throw new IllegalStateException("Il gioco potrebbe non essere impostato, terminato o non è il turno del giocatore"); }
+
         ConcurrentMap<Move<P>, Integer> mNext = new ConcurrentHashMap<>(); //Mappa contenente mosse -> rollouts vincenti
         double rollouts = Math.ceil(rpm/gameRul.validMoves().size()-1); //Numero di Rollouts da eseguire (RESIGN escluso, dunque -1)
 
         class Operation implements Callable {
-            Move<P> mov;
-            GameRuler<P> game;
+            private GameRuler<P> game;
 
-            public Operation(Move<P> m, GameRuler<P> g) {
-                mov = m;
+            private Operation(Move<P> m, GameRuler<P> g) {
                 game = g;
+                game.move(m); //Eseguo immediatamente la mossa
             }
 
             @Override
             public Integer call() throws Exception {
-                game.move(mov); //Esegue immediatamente la mossa che stiamo analizzando del validMoves()
-                int res = 0; //Risultato modificato dal numero di Rollout del gioco
+                int res = 0; //Risultato delle esecuzioni del gioco
 
-                for(int i = 0; i < rollouts; i++) { //Esegue il gioco tante volte quante i Rollouts impostati
-                    while(game.turn() < 0 || game.result() < 0) {
+                for(double i = 0; i < rollouts; i++) { //Esegue il gioco tante volte quante i Rollouts impostati
+                    GameRuler<P> gameExec = game.copy(); //Copia del gioco che verrà resettata ad ogni esecuzione
+                    while(gameExec.turn() < 0 || gameExec.result() < 0) {
                         List<Move<P>> temp = new ArrayList<>(); //Copia di ValidMoves in cui rimuovo RESIGN
-                        temp.addAll(game.validMoves()); temp.remove(new Move(Move.Kind.RESIGN)); //Evito la mossa resign
-                        game.move(temp.get(new Random().nextInt(temp.size()))); //Eseguo la mossa random
+                        temp.addAll(gameExec.validMoves()); temp.remove(new Move(Move.Kind.RESIGN)); //Evito la mossa resign
+                        gameExec.move(temp.get(new Random().nextInt(temp.size()))); //Eseguo la mossa random
                     }
 
-                    if(game.result() == 0) { res += 0; } //Parità
-                    else if((game.result() == 1 && game.players().get(0).equals(name)) || //Se la vittoria è del player res++
-                            (game.result() == 2 && game.players().get(1).equals(name))) { res += 1; }
+                    if(gameExec.result() == 0) { res += 0; } //Parità
+                    else if((gameExec.result() == 1 && gameExec.players().get(0).equals(name)) || //Se la vittoria è del player res++
+                            (gameExec.result() == 2 && gameExec.players().get(1).equals(name))) { res += 1; }
                     else res -= 1; //Sconfitta
                 }
 
@@ -104,7 +104,8 @@ public class MCTSPlayer<P> implements Player<P> {
             }
         }
 
-        ExecutorService service = Executors.newCachedThreadPool(); //Vedere se un fixed(1) è uguale a fare un esecuzione sequenziale
+        ExecutorService service = Executors.newCachedThreadPool(); //Default: parallel = true
+        if(!parallel) { service = Executors.newFixedThreadPool(1); } //Se parallel è false esegue il test con un thread solo, in maniera sequenziale
         for(Move<P> m : gameRul.validMoves()) {
             if(!m.getKind().equals(Move.Kind.RESIGN)) {
                 Callable<Integer> callable = new Operation(m, gameRul.copy());
@@ -121,9 +122,9 @@ public class MCTSPlayer<P> implements Player<P> {
         service.shutdown();
 
         Move<P> result = null;
-        Integer counter = -1;
+        Integer counter = -99; //Assurdamente basso, in caso di situazioni di sconfitta certa prende una mossa perdente indipendentemente
         for(Map.Entry<Move<P>, Integer> entry : mNext.entrySet()) {
-            if(entry.getValue() > counter) { result = entry.getKey(); counter = entry.getValue(); }
+            if(entry.getValue() > counter) { result = entry.getKey(); counter = entry.getValue(); } //Sceglie la mossa con il tasso di vittoria migliore
         }
 
         return result;
