@@ -53,11 +53,10 @@ public class RandPlayer<P> implements Player<P> {
             throw new IllegalStateException("Il gioco potrebbe non essere impostato, terminato o non è il turno del giocatore");
         }
         if (gameRul.validMoves().size() == 0) { return null; } //Se non sono presenti mosse possibili in questa situazione di gioco ritorna null
-        List temp = new ArrayList<>();
-        temp.addAll(gameRul.validMoves());
-        Random rand = new Random();
-        Move<P> m = (Move) temp.get(rand.nextInt(temp.size()));
-        while (m.getKind() == Move.Kind.RESIGN) { m = (Move) temp.get(rand.nextInt(temp.size())); } //Evita che la mossa sia di tipo RESIGN
-        return m;
+
+        List<Move<P>> temp = new ArrayList<>();
+        temp.addAll(gameRul.validMoves()); temp.remove(new Move(Move.Kind.RESIGN)); //Evito la mossa resign
+
+        return temp.get(new Random().nextInt(temp.size()));
     }
 }

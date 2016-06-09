@@ -50,7 +50,7 @@ public class Utils {
             names = Arrays.copyOf(names, names.length+1);
             names[names.length-1] = i.name(); }
         gf.setPlayerNames(names);
-        GameRuler<P> gR = gf.newGame().copy();
+        GameRuler<P> gR = gf.newGame();
         for(Player i : pp) { i.setGame(gR); }
         while(gR.turn() != 0 || gR.result() == -1) { gR.move(pp[gR.turn()-1].getMove()); } //Esecuzione del gioco
         return gR;

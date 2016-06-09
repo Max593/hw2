@@ -1,10 +1,11 @@
 package gapp.ulg.play;
 
 import gapp.ulg.game.board.*;
+import gapp.ulg.game.util.Utils;
 import gapp.ulg.games.MNKgame;
+import gapp.ulg.games.MNKgameFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 
@@ -69,17 +70,63 @@ public class MCTSPlayer<P> implements Player<P> {
 
     @Override
     public Move<P> getMove() {
-        Map<Pos, P> mapAct = new HashMap<>(); //Mappa situazione attuale
-        for(Pos p : gameRul.getBoard().get()) { mapAct.put(p, gameRul.getBoard().get(p)); }
+        ConcurrentMap<Move<P>, Integer> mNext = new ConcurrentHashMap<>(); //Mappa contenente mosse, rollouts vincenti
 
-        ConcurrentMap<Move<P>, GameRuler.Situation<P>> mNext = new ConcurrentHashMap<>(); //Mappa con mossa e situazione successiva (Verificare se Concurrent basta come race condition)
-        mNext.putAll(gameRul.mechanics().next.get(new GameRuler.Situation<>(mapAct, gameRul.turn()))); //Estratta dal Next di Mechanics del gioco
-        mNext.remove(new Move<P>(Move.Kind.RESIGN)); //Elimino l'eventualità del resign
+        double rollouts = Math.ceil(rpm/gameRul.validMoves().size()-1); //Numero di Rollouts da eseguire (RESIGN escluso, dunque -1)
 
-        double rollouts = Math.ceil(rpm/mNext.size()); //Numero di Rollouts da eseguire
+        class Operation implements Callable {
+            Move<P> mov;
+            GameRuler<P> game;
 
-        //GameRuler<P> nextGame = new MNKgame(); //Attendere risoluzione di getParam, diviene tutto più semplice
+            public Operation(Move<P> m, GameRuler<P> g) {
+                mov = m;
+                game = g;
+                game.move(mov); //Esegue immediatamente la mossa che stiamo analizzando del validMoves()
+            }
 
-        return null;
+            @Override
+            public Integer call() throws Exception {
+                int res = 0; //Risultato modificato dal numero di Rollout del gioco
+
+                for(int i = 0; i < rollouts; i++) { //Esegue il gioco tante volte quante i Rollouts impostati
+                    while(game.turn() != 0 || game.result() == -1) {
+                        List<Move<P>> temp = new ArrayList<>();
+                        temp.addAll(game.validMoves()); temp.remove(new Move(Move.Kind.RESIGN)); //Evito la mossa resign
+                        game.move(temp.get(new Random().nextInt(temp.size()))); //Eseguo la mossa
+                    }
+
+                    if(game.result() == 0) { res += 0; }
+                    else if((game.result() == 1 && game.players().get(0).equals(name)) || //Se la vittoria è del player res++
+                            (game.result() == 2 && game.players().get(1).equals(name))) { res += 1; }
+                    else res -= 1; //Sconfitta
+                }
+
+                return res;
+            }
+        }
+
+        ExecutorService service = Executors.newCachedThreadPool(); //Vedere se un fixed(1) è uguale a fare un esecuzione sequenziale
+        for(Move<P> m : gameRul.validMoves()) {
+            if(!m.getKind().equals(Move.Kind.RESIGN)) {
+                Callable<Integer> callable = new Operation(m, gameRul.copy());
+                try {
+                    mNext.put(m, service.submit(callable).get());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        service.shutdown();
+
+        Move<P> result = null;
+        Integer counter = -1;
+        for(Map.Entry<Move<P>, Integer> entry : mNext.entrySet()) {
+            if(entry.getValue() > counter) { result = entry.getKey(); counter = entry.getValue(); }
+        }
+
+        return result;
     }
 }
