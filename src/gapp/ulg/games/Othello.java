@@ -181,15 +181,14 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public boolean unMove() { //Vorrei scrivere board = copy board passata, non ci riesco
+    public boolean unMove() {
         if(gS.size() == 1) { return false; } //Se abbiamo appena iniziato il gioco
 
         Board<PieceModel<Species>> past = gS.get(gS.size()-2).getBoard(); //Prende la penultima board
-        board.get().stream().filter(p -> !board.get(p).equals(past.get(p))).forEach(p -> { //Confronta differenze e sostituisce posizioni
-            if (past.get(p) == null) {
-                board.remove(p);
-            } else board.put(past.get(p), p);
-        });
+        for(Pos p : board.get()) {
+            if(past.get(p) == null) { board.remove(p); }
+            else if(!past.get(p).equals(board.get(p))) { board.put(past.get(p), p); }
+        }
 
         cT = gS.get(gS.size()-2).turn(); //Ritorna al turno di gioco passato (ritorna anche in gioco se necessario)
         gS.remove(gS.size()-1); //Elimina lo status su cui è stato fatto unMove
@@ -236,22 +235,6 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         for(Pos p : acceptable) { //Per ogni posizione della board
             Set<Pos> swap = new HashSet<>();
             for(Board.Dir d : directions) {
-/* NON sembra velocizzare
-                if(!p.equals(new Pos(0,0)) || !p.equals(new Pos(size-1,0)) || !p.equals(new Pos(size-1,size-1)) || !p.equals(new Pos(0,size-1))) { //Angoli estremi esclusi
-                    if(p.getT() == 0 && (d.equals(Board.Dir.DOWN) || d.equals(Board.Dir.DOWN_L) ||d.equals(Board.Dir.DOWN_R))) { continue; } //Tutti i pezzi che si trovano alla base della board
-                    else if(p.getB() == 0 && (d.equals(Board.Dir.UP_L) || d.equals(Board.Dir.LEFT) || d.equals(Board.Dir.DOWN_L))) { continue; } //Posizioni sinistre
-                    else if(p.getB() == size-1 && (d.equals(Board.Dir.UP_R) || d.equals(Board.Dir.RIGHT) || d.equals(Board.Dir.DOWN_R))) { continue; } //Posizioni destre
-                    //else if(p.getT() == size-1 && (d.equals(Board.Dir.UP_L) || d.equals(Board.Dir.UP)) || d.equals(Board.Dir.UP_R)) { continue; } //Posizioni superiori [Perchè è sbagliato???]
-                }
-                if(p.equals(new Pos(0,0)) && (d.equals(Board.Dir.UP_L) || d.equals(Board.Dir.LEFT) //Angolo 0,0
-                        || d.equals(Board.Dir.DOWN_L) || d.equals(Board.Dir.DOWN) || d.equals(Board.Dir.DOWN_R))) { continue; }
-                if(p.equals(new Pos(size-1,0)) && (d.equals(Board.Dir.UP_R) || d.equals(Board.Dir.RIGHT) //Angolo inferiore destro
-                        || d.equals(Board.Dir.DOWN_R) || d.equals(Board.Dir.DOWN) || d.equals(Board.Dir.DOWN_L))) { continue; }
-                if(p.equals(new Pos(0,size-1)) && (d.equals(Board.Dir.UP_R) || d.equals(Board.Dir.UP) //Angolo superiore sinistro
-                        || d.equals(Board.Dir.UP_L) || d.equals(Board.Dir.LEFT) || d.equals(Board.Dir.DOWN_L))) { continue; }
-                if(p.equals(new Pos(size-1,size-1)) && (d.equals(Board.Dir.UP_L) || d.equals(Board.Dir.UP) //Angolo superiore destro
-                        || d.equals(Board.Dir.UP_R) || d.equals(Board.Dir.RIGHT) || d.equals(Board.Dir.DOWN_R))) { continue; }
-*/
                 try {
                     if(board.get(board.adjacent(p, d)).equals(pA)) {
                         Set<Pos> tSwap = new HashSet<>();
@@ -290,7 +273,8 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     @Override
     public GameRuler<PieceModel<Species>> copy() { return new Othello(time, size, player1, player2, Utils.bCopy(board, size, size), cT, forced, gS); }
 
-    private Othello(long t, int s, Player p1, Player p2, Board b, int cT, int forced, List gS) {
+    private Othello(long t, int s, Player<PieceModel<Species>> p1, Player<PieceModel<Species>> p2,
+                    Board<PieceModel<Species>> b, int cT, int forced, List<GameRuler<PieceModel<Species>>> gS) {
         this.time = t;
         this.size = s;
         this.player1 = p1;
@@ -329,8 +313,8 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                 @Override
                 public Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> call() throws Exception {
                     Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> res = new HashMap<>(); //Risultato
-                    othello.move(mov); Map<Pos, PieceModel<Species>> mapSit = new HashMap<>();
-                    othello.getBoard().positions().stream().filter(p -> othello.getBoard().get(p) != null).forEach(p -> mapSit.put(p, othello.getBoard().get(p)));
+                    othello.move(mov); Map<Pos, PieceModel<Species>> mapSit = new HashMap<>(); //Mappa dei pezzi per la situazione successiva con mossa mov
+                    for(Pos p : othello.getBoard().get()) { mapSit.put(p, othello.getBoard().get(p)); } //Aggiorno mapSit alla situazione attuale
                     res.put(mov, new Situation<>(mapSit, othello.turn()));
                     return res;
                 }

@@ -30,7 +30,7 @@ import java.util.concurrent.*;
  * della divisione decimale del numero di rollout per mossa <i>RPM</i> diviso il
  * numero <i>M</i> di mosse possibili (è sempre esclusa {@link Move.Kind#RESIGN}).
  * @param <P>  tipo del modello dei pezzi */
-public class MCTSPlayer<P> implements Player<P> { //Non ho ancora toccato Parallel, il suo utilizzo sarà importante nel test Mix nascosto
+public class MCTSPlayer<P> implements Player<P> { //Factory non completata, test segreti probabilmente falliranno
     public String name;
     private int rpm;
     private boolean parallel;
