@@ -116,14 +116,15 @@ public class MNKgameFactory implements GameFactory<GameRuler<PieceModel<Species>
             @Override
             public List<Integer> values() {
                 List<Integer> val = new ArrayList<>();
-                for(int i = 0; i<21; i++) {
+                for(int i = 1; i<21; i++) {
                     val.add(i);
                 }
-                return val;
+                return Collections.unmodifiableList(val);
             }
 
             @Override
             public void set(Object v) {
+                if(v == null || !values().contains(v)) { throw new IllegalArgumentException("L'oggetto per il set non può essere null"); }
                 if((Integer) v < 21 || (Integer) v > 0) {
                     value = (Integer) v; mw = (Integer) v;
                 } else throw new IllegalArgumentException("Il valore non è accettabile");
@@ -145,14 +146,15 @@ public class MNKgameFactory implements GameFactory<GameRuler<PieceModel<Species>
             @Override
             public List<Integer> values() {
                 List<Integer> val = new ArrayList<>();
-                for(int i = 0; i < 21; i++) {
+                for(int i = 1; i < 21; i++) {
                     val.add(i);
                 }
-                return val;
+                return Collections.unmodifiableList(val);
             }
 
             @Override
             public void set(Object v) {
+                if(v == null || !values().contains(v)) { throw new IllegalArgumentException("L'oggetto per il set non può essere null"); }
                 if((Integer) v < 21 || (Integer) v > 0) {
                     value = (Integer) v; nh = (Integer) v;
                 } else throw new IllegalArgumentException("Il valore non è accettabile");
@@ -172,11 +174,14 @@ public class MNKgameFactory implements GameFactory<GameRuler<PieceModel<Species>
 
             @Override
             public List<Integer> values() {
-                return Arrays.asList(1,2,3);
+                List<Integer> res = new ArrayList<>();
+                for(int i = 1; i < Math.max(mw, nh)+1; i++) { res.add(i); }
+                return Collections.unmodifiableList(res);
             }
 
             @Override
             public void set(Object v) {
+                if(v == null || !values().contains(v)) { throw new IllegalArgumentException("L'oggetto per il set non può essere null"); }
                 if((Integer) v <= Math.max(mw,nh) || (Integer) v > 0) {
                     value = (Integer) v; kk = (Integer) v;
                 }

@@ -76,7 +76,40 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
     public String name() { return String.valueOf(w)+","+String.valueOf(h)+","+String.valueOf(k)+"-game"; }
 
     @Override
-    public <T> T getParam(String name, Class<T> c) { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public <T> T getParam(String name, Class<T> c) {
+        if(name == null || c == null) { throw new NullPointerException("Il nome name o la classe sono null"); }
+        if(!Arrays.asList("Time", "M", "N", "K").contains(name)) { throw new IllegalArgumentException("Name non è un parametro di gioco"); }
+
+        if(name.equals("Time")) {
+            if(time <= 0) { return (T) "No limit"; }
+            for (Map.Entry<String, Long> e : Utils.mapTime().entrySet()) {
+                if(e.getValue().equals(time)) {
+                    if(!c.isInstance(e.getKey())) { throw new ClassCastException("Il tipo del valore della parametro è incompatibile con la classe c"); }
+                    return (T) e.getKey();
+                }
+            }
+        }
+
+        if(name.equals("M")) {
+            if(!c.isInstance(w)) { throw new ClassCastException("Il tipo del valore della parametro è incompatibile con la classe c"); }
+            Object res = w;
+            return (T) res;
+        }
+
+        if(name.equals("N")) {
+            if(!c.isInstance(h)) { throw new ClassCastException("Il tipo del valore della parametro è incompatibile con la classe c"); }
+            Object res = h;
+            return (T) res;
+        }
+
+        if(name.equals("K")) {
+            if(!c.isInstance(k)) { throw new ClassCastException("Il tipo del valore della parametro è incompatibile con la classe c"); }
+            Object res = k;
+            return (T) res;
+        }
+
+        return null;
+    }
 
     @Override
     public List<String> players() { return Collections.unmodifiableList(Arrays.asList(player1.name(), player2.name())); }
