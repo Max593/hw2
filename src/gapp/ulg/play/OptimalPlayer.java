@@ -48,17 +48,18 @@ import static gapp.ulg.game.board.GameRuler.Situation;
  * con due giocatori.
  * @param <P>  tipo del modello dei pezzi */
 public class OptimalPlayer<P> implements Player<P> {
+    public String name;
     /** Crea un giocatore capace di giocare la strategia ottimale per uno specifico
      * gioco.
      * @param name  il nome del giocatore
      * @param st  la strategia ottimale per un gioco
      * @throws NullPointerException se {@code name} o {@code st} è null */
     public OptimalPlayer(String name, Strategy st) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        this.name = name;
     }
 
     @Override
-    public String name() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+    public String name() { return name; }
 
     /** Se {@code g} non è il gioco per cui conosce la strategia ottimale, lancia
      * {@link IllegalArgumentException}. */
