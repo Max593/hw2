@@ -70,8 +70,7 @@ public class MCTSPlayer<P> implements Player<P> {
 
     @Override
     public Move<P> getMove() {
-        ConcurrentMap<Move<P>, Integer> mNext = new ConcurrentHashMap<>(); //Mappa contenente mosse, rollouts vincenti
-
+        ConcurrentMap<Move<P>, Integer> mNext = new ConcurrentHashMap<>(); //Mappa contenente mosse -> rollouts vincenti
         double rollouts = Math.ceil(rpm/gameRul.validMoves().size()-1); //Numero di Rollouts da eseguire (RESIGN escluso, dunque -1)
 
         class Operation implements Callable {
@@ -81,21 +80,21 @@ public class MCTSPlayer<P> implements Player<P> {
             public Operation(Move<P> m, GameRuler<P> g) {
                 mov = m;
                 game = g;
-                game.move(mov); //Esegue immediatamente la mossa che stiamo analizzando del validMoves()
             }
 
             @Override
             public Integer call() throws Exception {
+                game.move(mov); //Esegue immediatamente la mossa che stiamo analizzando del validMoves()
                 int res = 0; //Risultato modificato dal numero di Rollout del gioco
 
                 for(int i = 0; i < rollouts; i++) { //Esegue il gioco tante volte quante i Rollouts impostati
-                    while(game.turn() != 0 || game.result() == -1) {
-                        List<Move<P>> temp = new ArrayList<>();
+                    while(game.turn() < 0 || game.result() < 0) {
+                        List<Move<P>> temp = new ArrayList<>(); //Copia di ValidMoves in cui rimuovo RESIGN
                         temp.addAll(game.validMoves()); temp.remove(new Move(Move.Kind.RESIGN)); //Evito la mossa resign
-                        game.move(temp.get(new Random().nextInt(temp.size()))); //Eseguo la mossa
+                        game.move(temp.get(new Random().nextInt(temp.size()))); //Eseguo la mossa random
                     }
 
-                    if(game.result() == 0) { res += 0; }
+                    if(game.result() == 0) { res += 0; } //Parità
                     else if((game.result() == 1 && game.players().get(0).equals(name)) || //Se la vittoria è del player res++
                             (game.result() == 2 && game.players().get(1).equals(name))) { res += 1; }
                     else res -= 1; //Sconfitta

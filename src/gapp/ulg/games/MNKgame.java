@@ -234,7 +234,7 @@ public class MNKgame implements GameRuler<PieceModel<Species>> {
                     else if(!board.get(adj).equals(pm)) { pm = board.get(adj); pmC = 1; nC = 0; } //Se incontro una pedina avversaria dopo n > 0 spazi vuoti
                     adj = board.adjacent(adj, d); //Aggiorno alla posizione successiva
                 }
-                if(pmC + nC >= k && tot > nC) {System.out.println(d+" "+p.getB()+","+p.getT()); return true; } //Condizione in cui è ancora possibile la vittoria (fine del metodo)
+                if(pmC + nC >= k && tot > nC) { return true; } //Condizione in cui è ancora possibile la vittoria (fine del metodo)
             } catch(NullPointerException ignored) {}
         }
 
