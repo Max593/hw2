@@ -63,8 +63,30 @@ public class OptimalPlayerFactory<P> implements PlayerFactory<Player<P>,GameRule
      * </pre>
      * @return la lista con il parametro */
     @Override
-    public List<Param<?>> params() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+    public List<Param<?>> params() { //Tipo del parametro non noto, da ricontrollare
+        Param<?> exe = new Param<Object>() {
+            private String value = "Sequential";
+
+            @Override
+            public String name() { return "Execution"; }
+
+            @Override
+            public String prompt() { return "Threaded execution"; }
+
+            @Override
+            public List<Object> values() { return Arrays.asList("Sequential", "Parallel"); }
+
+            @Override
+            public void set(Object v) {
+                if(values().contains(String.valueOf(v))) { value = String.valueOf(v); }
+                else throw new IllegalArgumentException("Il valore non è nella lista");
+            }
+
+            @Override
+            public Object get() { return value; }
+        };
+
+        return Collections.unmodifiableList(Collections.singletonList(exe)); //Verificare se funziona, usare Arrays.asList in alt
     }
 
     /** Ritorna {@link Play#YES} se conosce già la strategia ottimale per il gioco

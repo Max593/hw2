@@ -2,6 +2,8 @@ package gapp.ulg.play;
 
 import gapp.ulg.game.board.*;
 
+import java.util.Objects;
+
 import static gapp.ulg.play.OptimalPlayerFactory.Strategy;
 import static gapp.ulg.game.board.GameRuler.Situation;
 
@@ -49,13 +51,17 @@ import static gapp.ulg.game.board.GameRuler.Situation;
  * @param <P>  tipo del modello dei pezzi */
 public class OptimalPlayer<P> implements Player<P> {
     public String name;
+    private Strategy st;
+    private GameRuler<P> gameRul = null;
     /** Crea un giocatore capace di giocare la strategia ottimale per uno specifico
      * gioco.
      * @param name  il nome del giocatore
      * @param st  la strategia ottimale per un gioco
      * @throws NullPointerException se {@code name} o {@code st} è null */
     public OptimalPlayer(String name, Strategy st) {
+        if(name == null || st == null) { throw new NullPointerException("Il nome del gioco o la strategia non possono essere null"); }
         this.name = name;
+        this.st = st;
     }
 
     @Override
@@ -64,18 +70,23 @@ public class OptimalPlayer<P> implements Player<P> {
     /** Se {@code g} non è il gioco per cui conosce la strategia ottimale, lancia
      * {@link IllegalArgumentException}. */
     @Override
-    public void setGame(GameRuler<P> g) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+    public void setGame(GameRuler<P> g) { //Manca l'eccezione, da comprendere un attimo
+        if(!Objects.equals(g.name(), st.gName())) { throw new IllegalArgumentException("Strategia non compatibile con il gioco corrente"); }
+        gameRul = g;
     }
 
     @Override
-    public void moved(int i, Move<P> m) {
+    public void moved(int i, Move<P> m) { //Ancora non nota l'utilità
         throw new UnsupportedOperationException("DA IMPLEMENTARE");
     }
 
     @Override
     public Move<P> getMove() {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(gameRul == null || gameRul.result() >= 0 ||
+                gameRul.players().indexOf(name) + 1 != gameRul.turn()) {
+            throw new IllegalStateException("Il gioco potrebbe non essere impostato, terminato o non è il turno del giocatore");
+        }
+        return null;
     }
 
 
