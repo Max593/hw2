@@ -1,6 +1,8 @@
 package gapp.ulg.game.util;
 
 import gapp.ulg.game.board.GameRuler;
+import gapp.ulg.game.board.PieceModel;
+import gapp.ulg.game.board.Pos;
 
 import static gapp.ulg.game.board.GameRuler.Situation;
 import static gapp.ulg.game.board.GameRuler.Next;
@@ -14,6 +16,8 @@ import java.util.function.Function;
  * <br>
  * Metodi per analizzare giochi */
 public class Probe {
+    private String coded; //Elemento in testo che contiene il gioco
+
     /** Un oggetto {@code EncS} è la codifica compatta di una situazione di gioco
      * {@link GameRuler.Situation}. È utile per mantenere in memoria insiemi con
      * moltissime situazioni minimizzando la memoria richiesta.
@@ -28,7 +32,30 @@ public class Probe {
          * @param gM  la meccanica di un gioco
          * @param s  una situazione dello stesso gioco */
         public EncS(Mechanics<P> gM, Situation<P> s) {
-            throw new UnsupportedOperationException("DA IMPLEMENTARE");
+            if(gM == null || s == null) { throw new NullPointerException("Parametri non definiti, nulla da codificare"); } //Non so se sia necessario al momento
+            //Aggiungere direttamente a code time
+            String pcs = "";
+            for(P pc : gM.pieces){
+                pcs += String.valueOf(((PieceModel)pc).getSpecies())+"("+((PieceModel) pc).color+")";
+                if(gM.pieces.indexOf(pc) != gM.pieces.size()) { pcs += ","; } //Aggiunge la virgola su ogni pezzo non finale
+            }
+            //Aggiungere direttamente a code np
+
+        }
+
+        private String tableEnc(Map<Pos, P> m) { //Codificatore di Mappe di tavoli da gioco (direttamente dalla situation)
+            String res = "";
+            int counter = 0;
+
+            for(Map.Entry<Pos, P> entry : m.entrySet()) { //[1x1.DISC(nero),1x2.DISC(bianco),...;]
+                PieceModel piece = (PieceModel) entry.getValue();
+                String color = piece.getColor();
+                res += entry.getKey().getB()+"x"+entry.getKey().getT()+"."+piece.getSpecies()+"("+color+")";
+                counter++;
+                if(counter != m.entrySet().size()) { res += ","; } //Aggiunge la virgola su ogni pezzo non finale
+            }
+
+            return res;
         }
 
         /** Ritorna la situazione codificata da questo oggetto. Se {@code gM} è null
