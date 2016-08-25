@@ -16,13 +16,13 @@ import java.util.function.Function;
  * <br>
  * Metodi per analizzare giochi */
 public class Probe {
-    private String coded; //Elemento in testo che contiene il gioco
-
     /** Un oggetto {@code EncS} è la codifica compatta di una situazione di gioco
      * {@link GameRuler.Situation}. È utile per mantenere in memoria insiemi con
      * moltissime situazioni minimizzando la memoria richiesta.
      * @param <P>  tipo del modello dei pezzi */
     public static class EncS<P> {
+        private String coded = ""; //Elemento in testo che contiene il gioco
+
         /** Crea una codifica compatta della situazione data relativa al gioco la
          * cui meccanica è specificata. La codifica è compatta almeno quanto quella
          * che si ottiene codificando la situazione con un numero e mantenendo in
@@ -33,21 +33,30 @@ public class Probe {
          * @param s  una situazione dello stesso gioco */
         public EncS(Mechanics<P> gM, Situation<P> s) {
             if(gM == null || s == null) { throw new NullPointerException("Parametri non definiti, nulla da codificare"); } //Non so se sia necessario al momento
-            //Aggiungere direttamente a code time
+            //time;pezzo,pezzo;np;BxT.pezzo,BxT.pezzo;tableEnc;turn;
             String pcs = "";
             for(P pc : gM.pieces){
                 pcs += String.valueOf(((PieceModel)pc).getSpecies())+"("+((PieceModel) pc).color+")";
-                if(gM.pieces.indexOf(pc) != gM.pieces.size()) { pcs += ","; } //Aggiunge la virgola su ogni pezzo non finale
+                if(gM.pieces.indexOf(pc)+1 != gM.pieces.size()) { pcs += ","; } //Aggiunge la virgola su ogni pezzo non finale
             }
-            //Aggiungere direttamente a code np
+            String possi = ""; //Positions e situazione iniziale, - se vuota o PieceModel se situazione iniziale
+            for(Pos p : gM.positions) {
+                Map<Pos, P> si = gM.start.newMap();
+                possi += p.getB()+"x"+p.getT()+".";
+                if(si.containsKey(p)) { possi += ((PieceModel) si.get(p)).getSpecies()+"("+((PieceModel) si.get(p)).getColor()+")"; }
+                else { possi += "-"; }
+                if(gM.positions.indexOf(p)+1 != gM.positions.size()) { possi += ","; }
+            }
 
+            this.coded += gM.time+";" +pcs+";" +gM.np+";" +possi+";" +tableEnc(s.newMap())+";" +s.turn;
+            System.out.println(coded); //Solo per test, da rimuovere alla consegna
         }
 
-        private String tableEnc(Map<Pos, P> m) { //Codificatore di Mappe di tavoli da gioco (direttamente dalla situation)
+        private String tableEnc(Map<Pos, P> m) { //Codificatore delle mappe dei tavoli da gioco (direttamente dalla Situation)
             String res = "";
             int counter = 0;
 
-            for(Map.Entry<Pos, P> entry : m.entrySet()) { //[1x1.DISC(nero),1x2.DISC(bianco),...;]
+            for(Map.Entry<Pos, P> entry : m.entrySet()) {
                 PieceModel piece = (PieceModel) entry.getValue();
                 String color = piece.getColor();
                 res += entry.getKey().getB()+"x"+entry.getKey().getT()+"."+piece.getSpecies()+"("+color+")";
@@ -64,7 +73,21 @@ public class Probe {
          * @param gM  la meccanica del gioco a cui appartiene la situazione
          * @return la situazione codificata da questo oggetto */
         public Situation<P> decode(Mechanics<P> gM) {
-            throw new UnsupportedOperationException("DA IMPLEMENTARE");
+            if(gM == null) { throw new NullPointerException("Elemento non definito, impossibile decodificare"); }
+
+            List<String> items = Arrays.asList(coded.split(";")); //6 elementi da gestire
+            List<String> pcsS = Arrays.asList(items.get(1).split(",")); //Lista (da decodificare) di pezzi usati
+            List<String> posS = Arrays.asList(items.get(3).split(",")); //Lista (da decodificare) di tutte le posizioni ed eventuali pezzi iniziali
+            List<String> sS = Arrays.asList(items.get(4).split(",")); //Lista (da decodificare) della mappa della situazione
+
+            if(!Long.valueOf(items.get(0)).equals(gM.time) ||
+                    !Integer.valueOf(items.get(2)).equals(gM.np)) { throw new IllegalArgumentException("I giochi non sono compatibili"); } //Test che non richiedono decodifica
+
+            for(String pieceS : pcsS) {
+                pieceS.split("( | )");
+            }
+
+            return null; //Solo per testare
         }
 
         /** Questa oggetto è uguale a {@code x} se e solo se {@code x} è della stessa
