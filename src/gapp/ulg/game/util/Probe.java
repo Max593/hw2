@@ -28,6 +28,7 @@ public class Probe {
         private int h = 1;
         private BigInteger table;
         private int turn;
+        private Map<Pos, P> temp; //Remove
 
         /** Crea una codifica compatta della situazione data relativa al gioco la
          * cui meccanica è specificata. La codifica è compatta almeno quanto quella
@@ -63,6 +64,7 @@ public class Probe {
             this.turn = s.turn;
             this.time = gM.time;
             this.np = gM.np;
+            this.temp = s.newMap(); //Remove
         }
 
         /** Ritorna la situazione codificata da questo oggetto. Se {@code gM} è null
@@ -81,11 +83,19 @@ public class Probe {
 
             int counter = 0;
             for(Pos p : gM.positions) {
-                if(String.valueOf(recoded.charAt(counter)).equals("0")) { counter++; mapDec.put(p, null); }
+                if(String.valueOf(recoded.charAt(counter)).equals("0")) { counter++; }
                 else if(String.valueOf(recoded.charAt(counter)).equals("1")) { counter++; mapDec.put(p, new PieceModel<>(PieceModel.Species.DISC, "nero")); }
                 else if(String.valueOf(recoded.charAt(counter)).equals("2")) { counter++; mapDec.put(p, new PieceModel<>(PieceModel.Species.DISC, "bianco")); }
             }
-
+//
+            for(Map.Entry<Pos, PieceModel<PieceModel.Species>> entry : mapDec.entrySet()) {
+                System.out.println(entry.getKey().getB()+"x"+entry.getKey().getT()+" "+temp.containsKey(entry.getKey()));
+            }
+            System.out.println();
+            for(Map.Entry<Pos, P> entry : temp.entrySet()) {
+                System.out.println(entry.getKey().getB()+"x"+entry.getKey().getT()+" "+mapDec.containsKey(entry.getKey()));
+            }
+//
             return new Situation<>((Map<Pos, P>) mapDec, turn);
         }
 
