@@ -83,11 +83,28 @@ public class Probe {
             if(!Long.valueOf(items.get(0)).equals(gM.time) ||
                     !Integer.valueOf(items.get(2)).equals(gM.np)) { throw new IllegalArgumentException("I giochi non sono compatibili"); } //Test che non richiedono decodifica
 
-            for(String pieceS : pcsS) {
-                pieceS.split("( | )");
+            List<PieceModel> pcs = new ArrayList<>(); //Effettiva lista pezzi
+            for(String pieceS : pcsS) { pcs.add(new PieceModel(PieceModel.Species.valueOf(pieceS.split("\\),\\(|\\)|\\(")[0]), pieceS.split("\\),\\(|\\)|\\(")[1])); }
+            if(!gM.pieces.containsAll(pcs)) { throw new IllegalArgumentException("I giochi non sono compatibili"); }
+
+            List<Pos> pos = new ArrayList<>();
+            Map<Pos, PieceModel> si = new HashMap<>();
+            for(String posiS : posS) {
+                Pos temp = new Pos(Integer.valueOf(posiS.split("x|\\.")[0]), Integer.valueOf(posiS.split("x|\\.")[1]));
+                pos.add(temp);
+                if(!posiS.split("x|\\.")[2].equals("-")) { si.put(temp, new PieceModel(PieceModel.Species.valueOf(posiS.split("x|\\.|\\),\\(|\\)|\\(")[2]), posiS.split("\\),\\(|\\)|\\(")[1])); }
+            }
+            if(!gM.positions.containsAll(pos) || !gM.start.newMap().equals(si)) { throw new IllegalArgumentException("I giochi non sono compatibili"); } //Non controllo il turno iniziale per ovvi motivi
+
+            //Inizio decodifica utile
+            Map<Pos, P> mapSit = new HashMap<>(); //Mappa della situazione da caricare
+            for(String sitS : sS) {
+                Pos temp = new Pos(Integer.valueOf(sitS.split("x|\\.")[0]), Integer.valueOf(sitS.split("x|\\.")[1]));
+                PieceModel piece = new PieceModel(PieceModel.Species.valueOf(sitS.split("x|\\.|\\),\\(|\\)|\\(")[2]), sitS.split("\\),\\(|\\)|\\(")[1]);
+                mapSit.put(temp, (P) piece);
             }
 
-            return null; //Solo per testare
+            return new Situation<P>(mapSit, Integer.valueOf(items.get(5)));
         }
 
         /** Questa oggetto è uguale a {@code x} se e solo se {@code x} è della stessa
@@ -98,13 +115,13 @@ public class Probe {
          * oggetto */
         @Override
         public boolean equals(Object x) {
-            throw new UnsupportedOperationException("DA IMPLEMENTARE");
+            return x instanceof EncS && Objects.equals(((EncS) x).coded, coded);
         }
 
         /** Ridefinito coerentemente con la ridefinizione di {@link EncS#equals(Object)}.
          * @return l'hash code di questa situazione codificata */
         @Override
-        public int hashCode() { throw new UnsupportedOperationException("DA IMPLEMENTARE"); }
+        public int hashCode() { return Objects.hash(coded); }
     }
 
     /** Un oggetto per rappresentare il risultato del metodo

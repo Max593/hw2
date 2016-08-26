@@ -25,7 +25,9 @@ public class CheckEnc {
         GameRuler.Situation<PieceModel<PieceModel.Species>> s1 = new GameRuler.Situation<>(m1,2);
 
         Probe.EncS<PieceModel<PieceModel.Species>> save1 = new Probe.EncS<>(g1.mechanics(),s1);
+        Probe.EncS<PieceModel<PieceModel.Species>> save2 = save1;
         save1.decode(g1.mechanics());
+        System.out.println(save1.hashCode()+" "+save2.hashCode());
     }
 
 }
