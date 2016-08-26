@@ -28,13 +28,20 @@ public class CheckEnc {
         m1.put(new Pos(2,3), new PieceModel<>(PieceModel.Species.DISC, "nero"));
         m1.put(new Pos(4,3), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
         m1.put(new Pos(2,6), new PieceModel<>(PieceModel.Species.DISC, "nero"));
-        m1.put(new Pos(7,3), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
         m1.put(new Pos(1,5), new PieceModel<>(PieceModel.Species.DISC, "nero"));
         m1.put(new Pos(2,7), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
         m1.put(new Pos(5,1), new PieceModel<>(PieceModel.Species.DISC, "nero"));
-        m1.put(new Pos(7,4), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
         m1.put(new Pos(1,5), new PieceModel<>(PieceModel.Species.DISC, "nero"));
         m1.put(new Pos(0,0), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        m1.put(new Pos(7,0), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        m1.put(new Pos(7,1), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        m1.put(new Pos(7,2), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        m1.put(new Pos(7,3), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        m1.put(new Pos(7,4), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        m1.put(new Pos(7,5), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        m1.put(new Pos(7,6), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+        m1.put(new Pos(7,7), new PieceModel<>(PieceModel.Species.DISC, "bianco"));
+
 
         GameRuler.Situation<PieceModel<PieceModel.Species>> s1 = new GameRuler.Situation<>(m1,2);
 

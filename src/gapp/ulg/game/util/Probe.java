@@ -48,7 +48,7 @@ public class Probe {
 
             //Codifica tipo pedine assente al momento, da risolvere
 
-            //Codifica della Situation
+            //Codifica della Situation [ Cambiare sistema di scorrimento, utilizzare w,h e prendere contenuto situation ]
             String coded = "";
             Map<Pos, P> allPcs = s.newMap();
             for(Pos p : gM.positions) { if(!allPcs.containsKey(p)) { allPcs.put(p, null); } } //Mappa completa con pezzi pieni e non
