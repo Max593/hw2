@@ -8,6 +8,7 @@ import static gapp.ulg.game.board.GameRuler.Situation;
 import static gapp.ulg.game.board.GameRuler.Next;
 import static gapp.ulg.game.board.GameRuler.Mechanics;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Function;
 
@@ -21,7 +22,12 @@ public class Probe {
      * moltissime situazioni minimizzando la memoria richiesta.
      * @param <P>  tipo del modello dei pezzi */
     public static class EncS<P> {
-        private String coded = ""; //Elemento in testo che contiene il gioco
+        private long time;
+        private int np;
+        private int w = 1;
+        private int h = 1;
+        private BigInteger table;
+        private int turn;
 
         /** Crea una codifica compatta della situazione data relativa al gioco la
          * cui meccanica è specificata. La codifica è compatta almeno quanto quella
@@ -33,38 +39,30 @@ public class Probe {
          * @param s  una situazione dello stesso gioco */
         public EncS(Mechanics<P> gM, Situation<P> s) {
             if(gM == null || s == null) { throw new NullPointerException("Parametri non definiti, nulla da codificare"); } //Non so se sia necessario al momento
-            //time;pezzo,pezzo;np;BxT.pezzo,BxT.pezzo;tableEnc;turn;
-            String pcs = "";
-            for(P pc : gM.pieces){
-                pcs += String.valueOf(((PieceModel)pc).getSpecies())+"("+((PieceModel) pc).color+")";
-                if(gM.pieces.indexOf(pc)+1 != gM.pieces.size()) { pcs += ","; } //Aggiunge la virgola su ogni pezzo non finale
-            }
-            String possi = ""; //Positions e situazione iniziale, - se vuota o PieceModel se situazione iniziale
-            for(Pos p : gM.positions) {
-                Map<Pos, P> si = gM.start.newMap();
-                possi += p.getB()+"x"+p.getT()+".";
-                if(si.containsKey(p)) { possi += ((PieceModel) si.get(p)).getSpecies()+"("+((PieceModel) si.get(p)).getColor()+")"; }
-                else { possi += "-"; }
-                if(gM.positions.indexOf(p)+1 != gM.positions.size()) { possi += ","; }
+
+            for(Pos p : gM.positions) { //Per determinare le dimensioni del tavolo da gioco e dunque tutte le posizioni
+                if(p.getB()+1 > this.w) { this.w = p.getB()+1; }
+                if(p.getT()+1 > this.h) { this.h = p.getT()+1; }
             }
 
-            this.coded += gM.time+";" +pcs+";" +gM.np+";" +possi+";" +tableEnc(s.newMap())+";" +s.turn;
-            System.out.println(coded); //Solo per test, da rimuovere alla consegna
-        }
+            //Codifica tipo pedine assente al momento, da risolvere
 
-        private String tableEnc(Map<Pos, P> m) { //Codificatore delle mappe dei tavoli da gioco (direttamente dalla Situation)
-            String res = "";
-            int counter = 0;
+            //Codifica della Situation
+            String coded = "";
+            Map<Pos, P> allPcs = s.newMap();
+            for(Pos p : gM.positions) { if(!allPcs.containsKey(p)) { allPcs.put(p, null); } } //Mappa completa con pezzi pieni e non
 
-            for(Map.Entry<Pos, P> entry : m.entrySet()) {
-                PieceModel piece = (PieceModel) entry.getValue();
-                String color = piece.getColor();
-                res += entry.getKey().getB()+"x"+entry.getKey().getT()+"."+piece.getSpecies()+"("+color+")";
-                counter++;
-                if(counter != m.entrySet().size()) { res += ","; } //Aggiunge la virgola su ogni pezzo non finale
+            for(Map.Entry<Pos, P> entry : allPcs.entrySet()) { //Da raffinare in caso di giochi con più di due pedine (abbastanza semplice)
+                if(entry.getValue() == null) { coded += 0; }
+                else if(entry.getValue().equals(new PieceModel<>(PieceModel.Species.DISC, "nero"))) { coded += 1; }
+                else if(entry.getValue().equals(new PieceModel<>(PieceModel.Species.DISC, "bianco"))) { coded += 2; }
             }
 
-            return res;
+            this.table = new BigInteger(coded);
+            System.out.println(coded+" "+table); //Remove
+            this.turn = s.turn;
+            this.time = gM.time;
+            this.np = gM.np;
         }
 
         /** Ritorna la situazione codificata da questo oggetto. Se {@code gM} è null
@@ -73,38 +71,22 @@ public class Probe {
          * @param gM  la meccanica del gioco a cui appartiene la situazione
          * @return la situazione codificata da questo oggetto */
         public Situation<P> decode(Mechanics<P> gM) {
-            if(gM == null) { throw new NullPointerException("Elemento non definito, impossibile decodificare"); }
+            if(gM == null) { throw new NullPointerException("Nessuna Mechanics inserita, impossibile decodificare"); }
 
-            List<String> items = Arrays.asList(coded.split(";")); //6 elementi da gestire
-            List<String> pcsS = Arrays.asList(items.get(1).split(",")); //Lista (da decodificare) di pezzi usati
-            List<String> posS = Arrays.asList(items.get(3).split(",")); //Lista (da decodificare) di tutte le posizioni ed eventuali pezzi iniziali
-            List<String> sS = Arrays.asList(items.get(4).split(",")); //Lista (da decodificare) della mappa della situazione
+            String recoded = String.valueOf(table);
+            Map<Pos, PieceModel<PieceModel.Species>> mapDec = new HashMap<>();
+            int add = gM.positions.size() - recoded.length();
+            recoded = new String(new char[add]).replace("\0", "0")+recoded;
+            System.out.println(recoded); //Remove
 
-            if(!Long.valueOf(items.get(0)).equals(gM.time) ||
-                    !Integer.valueOf(items.get(2)).equals(gM.np)) { throw new IllegalArgumentException("I giochi non sono compatibili"); } //Test che non richiedono decodifica
-
-            List<PieceModel> pcs = new ArrayList<>(); //Effettiva lista pezzi
-            for(String pieceS : pcsS) { pcs.add(new PieceModel(PieceModel.Species.valueOf(pieceS.split("\\),\\(|\\)|\\(")[0]), pieceS.split("\\),\\(|\\)|\\(")[1])); }
-            if(!gM.pieces.containsAll(pcs)) { throw new IllegalArgumentException("I giochi non sono compatibili"); }
-
-            List<Pos> pos = new ArrayList<>();
-            Map<Pos, PieceModel> si = new HashMap<>();
-            for(String posiS : posS) {
-                Pos temp = new Pos(Integer.valueOf(posiS.split("x|\\.")[0]), Integer.valueOf(posiS.split("x|\\.")[1]));
-                pos.add(temp);
-                if(!posiS.split("x|\\.")[2].equals("-")) { si.put(temp, new PieceModel(PieceModel.Species.valueOf(posiS.split("x|\\.|\\),\\(|\\)|\\(")[2]), posiS.split("\\),\\(|\\)|\\(")[1])); }
-            }
-            if(!gM.positions.containsAll(pos) || !gM.start.newMap().equals(si)) { throw new IllegalArgumentException("I giochi non sono compatibili"); } //Non controllo il turno iniziale per ovvi motivi
-
-            //Inizio decodifica utile
-            Map<Pos, P> mapSit = new HashMap<>(); //Mappa della situazione da caricare
-            for(String sitS : sS) {
-                Pos temp = new Pos(Integer.valueOf(sitS.split("x|\\.")[0]), Integer.valueOf(sitS.split("x|\\.")[1]));
-                PieceModel piece = new PieceModel(PieceModel.Species.valueOf(sitS.split("x|\\.|\\),\\(|\\)|\\(")[2]), sitS.split("\\),\\(|\\)|\\(")[1]);
-                mapSit.put(temp, (P) piece);
+            int counter = 0;
+            for(Pos p : gM.positions) {
+                if(String.valueOf(recoded.charAt(counter)).equals("0")) { counter++; mapDec.put(p, null); }
+                else if(String.valueOf(recoded.charAt(counter)).equals("1")) { counter++; mapDec.put(p, new PieceModel<>(PieceModel.Species.DISC, "nero")); }
+                else if(String.valueOf(recoded.charAt(counter)).equals("2")) { counter++; mapDec.put(p, new PieceModel<>(PieceModel.Species.DISC, "bianco")); }
             }
 
-            return new Situation<P>(mapSit, Integer.valueOf(items.get(5)));
+            return new Situation<>((Map<Pos, P>) mapDec, turn);
         }
 
         /** Questa oggetto è uguale a {@code x} se e solo se {@code x} è della stessa
@@ -115,13 +97,14 @@ public class Probe {
          * oggetto */
         @Override
         public boolean equals(Object x) {
-            return x instanceof EncS && Objects.equals(((EncS) x).coded, coded);
+            return x instanceof EncS && Objects.equals(((EncS) x).table, table) && ((EncS) x).time == time &&
+                    ((EncS) x).np == np && ((EncS) x).turn == turn;
         }
 
         /** Ridefinito coerentemente con la ridefinizione di {@link EncS#equals(Object)}.
          * @return l'hash code di questa situazione codificata */
         @Override
-        public int hashCode() { return Objects.hash(coded); }
+        public int hashCode() { return Objects.hash(table,time,np,turn); }
     }
 
     /** Un oggetto per rappresentare il risultato del metodo
