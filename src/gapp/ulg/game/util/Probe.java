@@ -46,17 +46,17 @@ public class Probe {
                 if(p.getT()+1 > this.h) { this.h = p.getT()+1; }
             }
 
-            //Codifica tipo pedine assente al momento, da risolvere
 
-            //Codifica della Situation [ Cambiare sistema di scorrimento, utilizzare w,h e prendere contenuto situation ]
             String coded = "";
             Map<Pos, P> allPcs = s.newMap();
             for(Pos p : gM.positions) { if(!allPcs.containsKey(p)) { allPcs.put(p, null); } } //Mappa completa con pezzi pieni e non
-
-            for(Map.Entry<Pos, P> entry : allPcs.entrySet()) { //Da raffinare in caso di giochi con più di due pedine (abbastanza semplice)
-                if(entry.getValue() == null) { coded += 0; }
-                else if(entry.getValue().equals(new PieceModel<>(PieceModel.Species.DISC, "nero"))) { coded += 1; }
-                else if(entry.getValue().equals(new PieceModel<>(PieceModel.Species.DISC, "bianco"))) { coded += 2; }
+            for(int i = 0; i < w; i++) {
+                for(int j = 0; j < h; j++) {
+                    Pos p = new Pos(i, j);
+                    if(allPcs.get(p) == null) { coded += 0; }
+                    else if(allPcs.get(p).equals(new PieceModel<>(PieceModel.Species.DISC, "nero"))) { coded += 1; }
+                    else if(allPcs.get(p).equals(new PieceModel<>(PieceModel.Species.DISC, "bianco"))) { coded += 2; }
+                }
             }
 
             this.table = new BigInteger(coded);
@@ -82,10 +82,15 @@ public class Probe {
             System.out.println(recoded); //Remove
 
             int counter = 0;
-            for(Pos p : gM.positions) {
-                if(String.valueOf(recoded.charAt(counter)).equals("0")) { counter++; }
-                else if(String.valueOf(recoded.charAt(counter)).equals("1")) { counter++; mapDec.put(p, new PieceModel<>(PieceModel.Species.DISC, "nero")); }
-                else if(String.valueOf(recoded.charAt(counter)).equals("2")) { counter++; mapDec.put(p, new PieceModel<>(PieceModel.Species.DISC, "bianco")); }
+            for(int i = 0; i < w; i++) {
+                for(int j = 0; j < h; j++) {
+                    Pos p = new Pos(i, j);
+                    if(gM.positions.contains(p)){
+                        if(String.valueOf(recoded.charAt(counter)).equals("0")) { counter++; }
+                        else if(String.valueOf(recoded.charAt(counter)).equals("1")) { counter++; mapDec.put(p, new PieceModel<>(PieceModel.Species.DISC, "nero")); }
+                        else if(String.valueOf(recoded.charAt(counter)).equals("2")) { counter++; mapDec.put(p, new PieceModel<>(PieceModel.Species.DISC, "bianco")); }
+                    }
+                }
             }
 //
             for(Map.Entry<Pos, PieceModel<PieceModel.Species>> entry : mapDec.entrySet()) {
