@@ -16,7 +16,7 @@ import java.util.function.Function;
  * DATE NEI JAVADOC. Non modificare le intestazioni dei metodi.</b>
  * <br>
  * Metodi per analizzare giochi */
-public class Probe {
+public class Probe { //Questo sistema attualmente funziona solo per Othello e Mnk
     /** Un oggetto {@code EncS} è la codifica compatta di una situazione di gioco
      * {@link GameRuler.Situation}. È utile per mantenere in memoria insiemi con
      * moltissime situazioni minimizzando la memoria richiesta.
@@ -28,7 +28,6 @@ public class Probe {
         private int h = 1;
         private BigInteger table;
         private int turn;
-        private Map<Pos, P> temp; //Remove
 
         /** Crea una codifica compatta della situazione data relativa al gioco la
          * cui meccanica è specificata. La codifica è compatta almeno quanto quella
@@ -46,25 +45,23 @@ public class Probe {
                 if(p.getT()+1 > this.h) { this.h = p.getT()+1; }
             }
 
-
             String coded = "";
             Map<Pos, P> allPcs = s.newMap();
-            for(Pos p : gM.positions) { if(!allPcs.containsKey(p)) { allPcs.put(p, null); } } //Mappa completa con pezzi pieni e non
             for(int i = 0; i < w; i++) {
                 for(int j = 0; j < h; j++) {
                     Pos p = new Pos(i, j);
-                    if(allPcs.get(p) == null) { coded += 0; }
+                    if(!gM.positions.contains(p)) { continue; } //Dovrebbe evitare di scrivere le posizioni non presenti nella board
+                    else if(!allPcs.containsKey(p)) { coded += 0; }
                     else if(allPcs.get(p).equals(new PieceModel<>(PieceModel.Species.DISC, "nero"))) { coded += 1; }
                     else if(allPcs.get(p).equals(new PieceModel<>(PieceModel.Species.DISC, "bianco"))) { coded += 2; }
                 }
             }
+            coded = new BigInteger(coded, 3).toString(10);
 
             this.table = new BigInteger(coded);
-            System.out.println(coded+" "+table); //Remove
             this.turn = s.turn;
             this.time = gM.time;
             this.np = gM.np;
-            this.temp = s.newMap(); //Remove
         }
 
         /** Ritorna la situazione codificata da questo oggetto. Se {@code gM} è null
@@ -75,11 +72,10 @@ public class Probe {
         public Situation<P> decode(Mechanics<P> gM) {
             if(gM == null) { throw new NullPointerException("Nessuna Mechanics inserita, impossibile decodificare"); }
 
-            String recoded = String.valueOf(table);
+            String recoded = table.toString(3);
             Map<Pos, PieceModel<PieceModel.Species>> mapDec = new HashMap<>();
-            int add = gM.positions.size() - recoded.length();
+            int add = gM.positions.size() - recoded.length(); //Devo verificare se è ancora utile, ma non dovrebbe pesare tanto
             recoded = new String(new char[add]).replace("\0", "0")+recoded;
-            System.out.println(recoded); //Remove
 
             int counter = 0;
             for(int i = 0; i < w; i++) {
@@ -92,15 +88,7 @@ public class Probe {
                     }
                 }
             }
-//
-            for(Map.Entry<Pos, PieceModel<PieceModel.Species>> entry : mapDec.entrySet()) {
-                System.out.println(entry.getKey().getB()+"x"+entry.getKey().getT()+" "+temp.containsKey(entry.getKey()));
-            }
-            System.out.println();
-            for(Map.Entry<Pos, P> entry : temp.entrySet()) {
-                System.out.println(entry.getKey().getB()+"x"+entry.getKey().getT()+" "+mapDec.containsKey(entry.getKey()));
-            }
-//
+
             return new Situation<>((Map<Pos, P>) mapDec, turn);
         }
 
