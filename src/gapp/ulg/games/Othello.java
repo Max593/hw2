@@ -323,9 +323,11 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             ExecutorService executor = Executors.newCachedThreadPool();
             Set<Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>>> listFut = new HashSet<>();
             for(Move<PieceModel<Species>> m : validMoves()) {
-                Callable<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> callable = new Operation(m, copy());
-                Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> future = executor.submit(callable);
-                listFut.add(future);
+                if(!m.getKind().equals(Move.Kind.RESIGN)){
+                    Callable<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> callable = new Operation(m, copy());
+                    Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> future = executor.submit(callable);
+                    listFut.add(future);
+                }
             }
 
             for(Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> future : listFut) {

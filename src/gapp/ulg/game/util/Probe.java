@@ -157,20 +157,20 @@ public class Probe { //Questo sistema attualmente funziona solo per Othello e Mn
                                                    Set<S> start) {
         if(nextF == null || dec == null || enc == null || start == null) { throw new NullPointerException("Uno o più parametri non sono utilizzabili"); }
 
-        ConcurrentMap<Set<Situation<P>>, Integer> nxtS = new ConcurrentHashMap<>(); //Mappa per produrre finalSet
+        ConcurrentMap<Set<S>, Integer> nxtS = new ConcurrentHashMap<>(); //Mappa per produrre finalSet
 
         class Operation implements Callable{
             private Situation<P> decSit;
             private Operation(S t) { this.decSit = dec.apply(t); }
 
             @Override
-            public Map<Set<Situation<P>>, Integer> call() throws Exception {
-                Map<Set<Situation<P>>, Integer> res = new HashMap<>();
+            public Map<Set<S>, Integer> call() throws Exception {
+                Map<Set<S>, Integer> res = new HashMap<>();
 
-                Set<Situation<P>> setSit = new HashSet<>(); //Set di risultato
+                Set<S> setSit = new HashSet<>(); //Set di risultato
                 int counter = 0; //Grado di una situazione di gioco
                 for(Map.Entry<?, Situation<P>> entry : nextF.get(decSit).entrySet()) {
-                    setSit.add(entry.getValue());
+                    setSit.add(enc.apply(entry.getValue()));
                     counter++;
                 }
                 res.put(setSit, counter);
@@ -179,14 +179,14 @@ public class Probe { //Questo sistema attualmente funziona solo per Othello e Mn
         }
 
         ExecutorService executor = Executors.newCachedThreadPool();
-        Set<Future<Map<Set<Situation<P>>, Integer>>> listFut = new HashSet<>();
+        Set<Future<Map<Set<S>, Integer>>> listFut = new HashSet<>();
         for(S s : start) {
-            Callable<Map<Set<Situation<P>>, Integer>> callable = new Operation(s);
-            Future<Map<Set<Situation<P>>, Integer>> future = executor.submit(callable);
+            Callable<Map<Set<S>, Integer>> callable = new Operation(s);
+            Future<Map<Set<S>, Integer>> future = executor.submit(callable);
             listFut.add(future);
         }
 
-        for(Future<Map<Set<Situation<P>>, Integer>> future : listFut) {
+        for(Future<Map<Set<S>, Integer>> future : listFut) {
             try {
                 nxtS.putAll(future.get());
             } catch (InterruptedException e) {
@@ -197,18 +197,15 @@ public class Probe { //Questo sistema attualmente funziona solo per Othello e Mn
         }
         executor.shutdown();
 
-        Set<S> finalSet = new HashSet<S>();
-        int min = 99; //Esageratamente più grande del dovuto
-        int max = 0;
+        Set<S> finalSet = new HashSet<>();
+        int min = Collections.min(nxtS.values());
+        int max = Collections.max(nxtS.values());
         int sum = 0;
-        for(Map.Entry<Set<Situation<P>>, Integer> entry : nxtS.entrySet()) {
-            if(min > entry.getValue()) { min = entry.getValue(); }
-            if(max < entry.getValue()) { max = entry.getValue(); }
+        for(Map.Entry<Set<S>, Integer> entry : nxtS.entrySet()) {
             sum += entry.getValue();
-
-            for(Situation<P> sit : entry.getKey()) { finalSet.add(enc.apply(sit)); }
+            finalSet.addAll(entry.getKey());
         }
 
-        return new NSResult<S>(finalSet, min, max, sum);
+        return new NSResult<>(finalSet, min, max, sum);
     }
 }
