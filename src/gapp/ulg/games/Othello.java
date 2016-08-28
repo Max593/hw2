@@ -339,8 +339,8 @@ public class Othello implements GameRuler<PieceModel<Species>> {
                     e.printStackTrace();
                 }
             }
-
             executor.shutdown();
+
             return nextMoves;
         };
 

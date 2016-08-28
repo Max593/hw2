@@ -160,7 +160,7 @@ public class Probe { //Questo sistema attualmente funziona solo per Othello e Mn
         ConcurrentMap<Set<S>, Integer> nxtS = new ConcurrentHashMap<>(); //Mappa per produrre finalSet
 
         class Operation implements Callable{
-            private Situation<P> decSit;
+            private Situation<P> decSit; //Situazione decodificata
             private Operation(S t) { this.decSit = dec.apply(t); }
 
             @Override
@@ -168,12 +168,8 @@ public class Probe { //Questo sistema attualmente funziona solo per Othello e Mn
                 Map<Set<S>, Integer> res = new HashMap<>();
 
                 Set<S> setSit = new HashSet<>(); //Set di risultato
-                int counter = 0; //Grado di una situazione di gioco
-                for(Map.Entry<?, Situation<P>> entry : nextF.get(decSit).entrySet()) {
-                    setSit.add(enc.apply(entry.getValue()));
-                    counter++;
-                }
-                res.put(setSit, counter);
+                for(Map.Entry<?, Situation<P>> entry : nextF.get(decSit).entrySet()) { setSit.add(enc.apply(entry.getValue())); }
+                res.put(setSit, setSit.size());
                 return res;
             }
         }
