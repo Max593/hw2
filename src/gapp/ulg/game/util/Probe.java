@@ -10,6 +10,7 @@ import static gapp.ulg.game.board.GameRuler.Mechanics;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.Function;
 
 /** <b>IMPLEMENTARE I METODI INDICATI CON "DA IMPLEMENTARE" SECONDO LE SPECIFICHE
@@ -154,6 +155,60 @@ public class Probe { //Questo sistema attualmente funziona solo per Othello e Mn
                                                    Function<S,Situation<P>> dec,
                                                    Function<Situation<P>,S> enc,
                                                    Set<S> start) {
-        throw new UnsupportedOperationException("DA IMPLEMENTARE");
+        if(nextF == null || dec == null || enc == null || start == null) { throw new NullPointerException("Uno o più parametri non sono utilizzabili"); }
+
+        ConcurrentMap<Set<Situation<P>>, Integer> nxtS = new ConcurrentHashMap<>(); //Mappa per produrre finalSet
+
+        class Operation implements Callable{
+            private Situation<P> decSit;
+            private Operation(S t) { this.decSit = dec.apply(t); }
+
+            @Override
+            public Map<Set<Situation<P>>, Integer> call() throws Exception {
+                Map<Set<Situation<P>>, Integer> res = new HashMap<>();
+
+                Set<Situation<P>> setSit = new HashSet<>(); //Set di risultato
+                int counter = 0; //Grado di una situazione di gioco
+                for(Map.Entry<?, Situation<P>> entry : nextF.get(decSit).entrySet()) {
+                    setSit.add(entry.getValue());
+                    counter++;
+                }
+                res.put(setSit, counter);
+                return res;
+            }
+        }
+
+        ExecutorService executor = Executors.newCachedThreadPool();
+        Set<Future<Map<Set<Situation<P>>, Integer>>> listFut = new HashSet<>();
+        for(S s : start) {
+            Callable<Map<Set<Situation<P>>, Integer>> callable = new Operation(s);
+            Future<Map<Set<Situation<P>>, Integer>> future = executor.submit(callable);
+            listFut.add(future);
+        }
+
+        for(Future<Map<Set<Situation<P>>, Integer>> future : listFut) {
+            try {
+                nxtS.putAll(future.get());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        executor.shutdown();
+
+        Set<S> finalSet = new HashSet<S>();
+        int min = 99; //Esageratamente più grande del dovuto
+        int max = 0;
+        int sum = 0;
+        for(Map.Entry<Set<Situation<P>>, Integer> entry : nxtS.entrySet()) {
+            if(min > entry.getValue()) { min = entry.getValue(); }
+            if(max < entry.getValue()) { max = entry.getValue(); }
+            sum += entry.getValue();
+
+            for(Situation<P> sit : entry.getKey()) { finalSet.add(enc.apply(sit)); }
+        }
+
+        return new NSResult<S>(finalSet, min, max, sum);
     }
 }
