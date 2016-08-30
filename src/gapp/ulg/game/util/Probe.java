@@ -177,7 +177,7 @@ public class Probe { //Questo sistema attualmente funziona solo per Othello e Mn
         ExecutorService executor = Executors.newCachedThreadPool();
         Set<Future<Map<Set<S>, Integer>>> listFut = new HashSet<>();
         for(S s : start) {
-            Callable<Map<Set<S>, Integer>> callable = new Operation(s);
+            Operation callable = new Operation(s);
             Future<Map<Set<S>, Integer>> future = executor.submit(callable);
             listFut.add(future);
         }
@@ -185,9 +185,7 @@ public class Probe { //Questo sistema attualmente funziona solo per Othello e Mn
         for(Future<Map<Set<S>, Integer>> future : listFut) {
             try {
                 nxtS.putAll(future.get());
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }

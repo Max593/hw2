@@ -286,7 +286,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
     }
 
     @Override
-    public Mechanics<PieceModel<Species>> mechanics() { //Funziona, non lo toccherò mai più
+    public Mechanics<PieceModel<Species>> mechanics() {
 
         List<PieceModel<Species>> pcs = Arrays.asList(new PieceModel<>(Species.DISC, "nero"), new PieceModel<>(Species.DISC, "bianco")); //Tutti i pezzi di gioco
 
@@ -296,7 +296,7 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         posMap.put(new Pos((size/2)-1, (size/2)-1), new PieceModel<>(Species.DISC, "nero")); //N 3,3
         posMap.put(new Pos((size/2), (size/2)-1), new PieceModel<>(Species.DISC, "bianco")); //B 4,3
 
-        Next<PieceModel<Species>> prossimaM = s -> { //Funziona ma è troppo lento
+        Next<PieceModel<Species>> prossimaM = s -> { //Funziona ma è troppo lento!
             if(s == null) { throw new NullPointerException("La situazione di gioco non può essere null"); }
 
             ConcurrentMap<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new ConcurrentHashMap<>(); //Mappa soluzione
@@ -307,11 +307,10 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
             class Operation implements Callable{
                 private Move<PieceModel<Species>> mov;
-                private GameRuler<PieceModel<Species>> othello;
+                private GameRuler<PieceModel<Species>> othello = nxt.copy();
 
-                private Operation(Move<PieceModel<Species>> m, GameRuler<PieceModel<Species>> g) {
+                private Operation(Move<PieceModel<Species>> m) {
                     this.mov = m;
-                    this.othello = g;
                 }
 
                 @Override
@@ -325,22 +324,13 @@ public class Othello implements GameRuler<PieceModel<Species>> {
             }
 
             ExecutorService executor = Executors.newCachedThreadPool();
-            Set<Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>>> listFut = new HashSet<>();
             for(Move<PieceModel<Species>> m : nxt.validMoves()) {
                 if(!m.getKind().equals(Move.Kind.RESIGN)){
-                    Callable<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> callable = new Operation(m, nxt.copy());
-                    Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> future = executor.submit(callable);
-                    listFut.add(future);
-                }
-            }
-
-            for(Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> future : listFut) {
-                try {
-                    nextMoves.putAll(future.get());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
+                    try {
+                        nextMoves.putAll((Map<? extends Move<PieceModel<Species>>, ? extends Situation<PieceModel<Species>>>) executor.submit(new Operation(m)).get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             executor.shutdown();
