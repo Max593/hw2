@@ -296,16 +296,20 @@ public class Othello implements GameRuler<PieceModel<Species>> {
         posMap.put(new Pos((size/2)-1, (size/2)-1), new PieceModel<>(Species.DISC, "nero")); //N 3,3
         posMap.put(new Pos((size/2), (size/2)-1), new PieceModel<>(Species.DISC, "bianco")); //B 4,3
 
-        Next<PieceModel<Species>> prossimaM = s -> {
+        Next<PieceModel<Species>> prossimaM = s -> { //Funziona ma è troppo lento
             if(s == null) { throw new NullPointerException("La situazione di gioco non può essere null"); }
 
             ConcurrentMap<Move<PieceModel<Species>>, Situation<PieceModel<Species>>> nextMoves = new ConcurrentHashMap<>(); //Mappa soluzione
+
+            Board<PieceModel<Species>> bOth = new BoardOct<>(size, size);
+            for(Map.Entry<Pos, PieceModel<Species>> entry : s.newMap().entrySet()) { bOth.put(entry.getValue(), entry.getKey()); }
+            Othello nxt = new Othello(0,size,player1,player2,bOth,s.turn,forced,gS);
 
             class Operation implements Callable{
                 private Move<PieceModel<Species>> mov;
                 private GameRuler<PieceModel<Species>> othello;
 
-                private Operation(Move m, GameRuler g) {
+                private Operation(Move<PieceModel<Species>> m, GameRuler<PieceModel<Species>> g) {
                     this.mov = m;
                     this.othello = g;
                 }
@@ -322,9 +326,9 @@ public class Othello implements GameRuler<PieceModel<Species>> {
 
             ExecutorService executor = Executors.newCachedThreadPool();
             Set<Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>>> listFut = new HashSet<>();
-            for(Move<PieceModel<Species>> m : validMoves()) {
+            for(Move<PieceModel<Species>> m : nxt.validMoves()) {
                 if(!m.getKind().equals(Move.Kind.RESIGN)){
-                    Callable<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> callable = new Operation(m, copy());
+                    Callable<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> callable = new Operation(m, nxt.copy());
                     Future<Map<Move<PieceModel<Species>>, Situation<PieceModel<Species>>>> future = executor.submit(callable);
                     listFut.add(future);
                 }
